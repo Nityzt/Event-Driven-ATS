@@ -50,7 +50,7 @@ app.get('/healthz', (req, res) => {
 });
 
 // API Routes
-// app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth'));
 // app.use('/api/candidates', require('./routes/candidates'));
 // app.use('/api/jobs', require('./routes/jobs'));
 // app.use('/api/applications', require('./routes/applications'));
