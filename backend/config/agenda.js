@@ -1,7 +1,6 @@
 const Agenda = require('agenda');
 const mongoose = require('mongoose');
 
-// Create Agenda instance
 const agenda = new Agenda({
   mongo: mongoose.connection,
   db: { collection: 'agendaJobs' },
@@ -12,7 +11,6 @@ const agenda = new Agenda({
   defaultLockLifetime: 10000,
 });
 
-// Graceful shutdown
 const graceful = () => {
   agenda.stop(() => {
     console.log('[Agenda] Gracefully stopped');

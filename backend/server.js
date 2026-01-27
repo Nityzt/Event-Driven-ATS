@@ -25,13 +25,13 @@ app.use(cors({
 }));
 
 // Rate Limiting
-app.use(rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 min
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: 'Too many requests from this IP, try again later.'
-}));
+// app.use(rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 min
+//     max: 100,
+//     standardHeaders: true,
+//     legacyHeaders: false,
+//     message: 'Too many requests from this IP, try again later.'
+// }));
 
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
