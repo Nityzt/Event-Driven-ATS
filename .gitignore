@@ -28,3 +28,10 @@ backend/uploads/*
 
 # Testing
 coverage/
+
+backend/.tokens
+backend/get-token.sh
+backend/tests/*.log
+backend/tests/*.json
+
+
