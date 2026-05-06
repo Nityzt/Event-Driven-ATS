@@ -252,6 +252,34 @@ exports.logout = async (req, res) => {
   }
 };
 
+// @desc    Change password
+// @route   PATCH /api/auth/change-password
+// @access  Private
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: 'currentPassword and newPassword are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findById(req.user._id).select('+password');
+    const valid = await user.comparePassword(currentPassword);
+    if (!valid) {
+      return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private
