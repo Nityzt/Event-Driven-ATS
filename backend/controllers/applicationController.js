@@ -2,6 +2,7 @@ const Application = require('../models/Application');
 const Candidate = require('../models/Candidate');
 const Job = require('../models/Job');
 const AuditLog = require('../models/AuditLog');
+const workflowEngine = require('../services/workflowEngine');
 
 // @desc    Get all applications
 // @route   GET /api/applications
@@ -214,14 +215,21 @@ exports.createApplication = async (req, res) => {
     await application.populate('jobId', 'title location');
     
     console.log(`✅ Application created: ${application._id}`);
-    console.log(`🎯 This will trigger "Application.created" workflows`);
-    
+
     res.status(201).json({
       success: true,
       data: application
     });
-    
-    // Note: Workflows are automatically triggered by the post-save hook in Application model
+
+    // Trigger Application.created workflows asynchronously after response
+    workflowEngine.trigger('Application.created', {
+      applicationId: application._id,
+      candidateId:   candidateId,
+      jobId:         jobId,
+      candidate:     { name: candidate.name, email: candidate.email, phone: candidate.phone, skills: candidate.skills },
+      job:           { title: job.title, location: job.location, company: job.company || '' },
+      application:   { stage: application.stage, appliedAt: application.createdAt }
+    }).catch(err => console.error('[AppController] Workflow trigger error:', err));
     
   } catch (error) {
     console.error('Create application error:', error);
@@ -289,13 +297,27 @@ exports.updateApplication = async (req, res) => {
     
     await application.populate('candidateId', 'name email');
     await application.populate('jobId', 'title location');
-    
+
     res.json({
       success: true,
       data: application
     });
-    
-    // Note: Stage change workflows triggered by post-update hook
+
+    // Trigger Stage.changed workflows if stage actually changed
+    if (stage && stage !== oldStage) {
+      const candidate = await Candidate.findById(application.candidateId);
+      const job = await Job.findById(application.jobId);
+      workflowEngine.trigger('Stage.changed', {
+        applicationId: application._id,
+        candidateId:   application.candidateId,
+        jobId:         application.jobId,
+        oldStage,
+        newStage:      stage,
+        candidate:     candidate ? { name: candidate.name, email: candidate.email, phone: candidate.phone } : {},
+        job:           job       ? { title: job.title, location: job.location, company: job.company || '' } : {},
+        application:   { stage, appliedAt: application.createdAt }
+      }).catch(err => console.error('[AppController] Workflow trigger error:', err));
+    }
     
   } catch (error) {
     console.error('Update application error:', error);
