@@ -250,6 +250,27 @@ agenda.define('cleanup-old-applications', async (job) => {
   }
 });
 
+// Job 9: Resume a paused workflow run (triggered by wait step)
+agenda.define('resume-run', async (job) => {
+  const { runId, workflowId, applicationId, context } = job.attrs.data;
+
+  try {
+    console.log(`[WorkflowEngine] Resuming run ${runId}`);
+    const Workflow = require('../models/Workflow');
+    const workflow = await Workflow.findById(workflowId);
+    if (!workflow) {
+      console.error(`[WorkflowEngine] Workflow ${workflowId} not found for resume`);
+      return;
+    }
+
+    const { executeRun } = require('./workflowEngine');
+    await executeRun(runId, workflow, context || {});
+  } catch (err) {
+    console.error('[WorkflowEngine] Error in resume-run job:', err);
+    throw err;
+  }
+});
+
 console.log('[Workflow] Job definitions loaded');
 
 // Function to initialize workflows
@@ -262,5 +283,4 @@ async function initializeWorkflows() {
 module.exports = {
   agenda,
   initializeWorkflows
-
 };
