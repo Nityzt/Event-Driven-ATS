@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Layout from './components/Layout';
+import OnboardingModal from './components/onboarding/OnboardingModal';
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -63,6 +64,9 @@ function App() {
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+
+        {/* Onboarding — renders as portal, only shows for first-time users */}
+        <OnboardingModal />
       </AuthProvider>
     </ErrorBoundary>
   );

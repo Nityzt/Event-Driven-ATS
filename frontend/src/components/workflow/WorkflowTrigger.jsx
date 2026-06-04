@@ -51,14 +51,14 @@ const WorkflowTrigger = ({ triggers, onAdd, onRemove }) => {
           {triggers.map((trigger, index) => (
             <div
               key={index}
-              className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2"
+              className="flex items-center justify-between bg-brand-50 border border-brand-200 rounded-lg px-4 py-2"
             >
-              <span className="text-sm font-medium text-blue-800">
+              <span className="text-sm font-medium text-brand-800">
                 {trigger.label}
               </span>
               <button
                 onClick={() => onRemove(index)}
-                className="text-blue-600 hover:text-blue-800"
+                className="text-brand-500 hover:text-brand-700"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -75,7 +75,7 @@ const WorkflowTrigger = ({ triggers, onAdd, onRemove }) => {
             setSelectedTrigger(e.target.value);
             setSelectedStage('');
           }}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
         >
           <option value="">Select trigger...</option>
           {triggerTypes.map((trigger) => (
@@ -89,7 +89,7 @@ const WorkflowTrigger = ({ triggers, onAdd, onRemove }) => {
           <select
             value={selectedStage}
             onChange={(e) => setSelectedStage(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           >
             <option value="">Select stage...</option>
             {stages.map((stage) => (
@@ -103,7 +103,7 @@ const WorkflowTrigger = ({ triggers, onAdd, onRemove }) => {
         <button
           onClick={handleAdd}
           disabled={!selectedTrigger || (selectedTrigger === 'Stage.changed' && !selectedStage)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:bg-zinc-400 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add

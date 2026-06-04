@@ -1,17 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Search, Settings, LogOut, User, ChevronDown, Briefcase, X } from 'lucide-react';
+import { Bell, Search, Settings, LogOut, User, ChevronDown, Briefcase, X, Menu } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { applicationsAPI, candidatesAPI, jobsAPI } from '../api/index';
-
-const STAGE_COLORS = {
-  Applied: 'bg-blue-100 text-blue-700',
-  Screening: 'bg-yellow-100 text-yellow-700',
-  Interview: 'bg-purple-100 text-purple-700',
-  Offer: 'bg-green-100 text-green-700',
-  Hired: 'bg-emerald-100 text-emerald-700',
-  Rejected: 'bg-red-100 text-red-700',
-};
+import Badge, { stageToBadgeVariant } from './ui/Badge';
+import Spinner from './ui/Spinner';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -23,7 +16,7 @@ function timeAgo(dateStr) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-export const Navbar = () => {
+export const Navbar = ({ setSidebarOpen }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -40,22 +33,16 @@ export const Navbar = () => {
   const searchRef = useRef(null);
   const debounceRef = useRef(null);
 
-  // Fetch recent applications once for notification panel
   useEffect(() => {
     applicationsAPI.getAll({ limit: 5, sort: '-createdAt' })
       .then(res => setRecentApps(res?.data?.applications || res?.applications || []))
       .catch(() => {});
   }, []);
 
-  // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e) {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setShowNotifications(false);
-      }
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setShowSearchDropdown(false);
-      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false);
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowSearchDropdown(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -78,11 +65,8 @@ export const Navbar = () => {
         jobs: jRes?.data?.jobs || jRes?.jobs || [],
       });
       setShowSearchDropdown(true);
-    } catch {
-      // silently ignore
-    } finally {
-      setSearching(false);
-    }
+    } catch { /* silently ignore */ }
+    finally { setSearching(false); }
   }, []);
 
   function handleSearchChange(e) {
@@ -93,62 +77,69 @@ export const Navbar = () => {
   }
 
   function handleSearchKeyDown(e) {
-    if (e.key === 'Escape') {
-      setShowSearchDropdown(false);
-      setSearchQuery('');
-    }
+    if (e.key === 'Escape') { setShowSearchDropdown(false); setSearchQuery(''); }
   }
 
-  function handleLogout() {
-    logout();
-    navigate('/login');
-  }
+  function handleLogout() { logout(); navigate('/login'); }
 
   const hasResults = searchResults.candidates.length > 0 || searchResults.jobs.length > 0;
+  const initial = user?.name?.charAt(0).toUpperCase() || 'U';
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
+    <header className="bg-white border-b border-zinc-200 px-4 lg:px-6 h-16 flex items-center flex-shrink-0">
+      <div className="flex items-center gap-3 w-full">
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open navigation menu"
+          className="lg:hidden p-2 -ml-1 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors flex-shrink-0"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
 
         {/* Search */}
         <div className="flex-1 max-w-lg relative" ref={searchRef}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
               onKeyDown={handleSearchKeyDown}
               onFocus={() => hasResults && setShowSearchDropdown(true)}
-              placeholder="Search candidates, jobs..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Search candidates, jobs…"
+              aria-label="Search candidates and jobs"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-zinc-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors"
             />
             {searching && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Spinner size="sm" />
+              </span>
             )}
           </div>
 
           {showSearchDropdown && (
-            <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+            <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-zinc-200 rounded-xl shadow-modal z-50 max-h-80 overflow-y-auto animate-slide-up">
               {!hasResults ? (
-                <p className="px-4 py-3 text-sm text-gray-500">No results for "{searchQuery}"</p>
+                <p className="px-4 py-6 text-sm text-zinc-400 text-center">No results for "{searchQuery}"</p>
               ) : (
                 <>
                   {searchResults.candidates.length > 0 && (
                     <div>
-                      <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">Candidates</p>
+                      <p className="px-4 py-2 text-2xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-100">Candidates</p>
                       {searchResults.candidates.map(c => (
                         <button
                           key={c._id}
                           onClick={() => { navigate('/candidates'); setShowSearchDropdown(false); setSearchQuery(''); }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3"
+                          className="w-full px-4 py-2.5 text-left hover:bg-zinc-50 flex items-center gap-3 transition-colors"
                         >
-                          <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-semibold flex-shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 text-xs font-semibold flex-shrink-0">
                             {c.name?.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-800">{c.name}</p>
-                            <p className="text-xs text-gray-500">{c.email}</p>
+                            <p className="text-sm font-medium text-zinc-800">{c.name}</p>
+                            <p className="text-xs text-zinc-400">{c.email}</p>
                           </div>
                         </button>
                       ))}
@@ -156,17 +147,17 @@ export const Navbar = () => {
                   )}
                   {searchResults.jobs.length > 0 && (
                     <div>
-                      <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">Jobs</p>
+                      <p className="px-4 py-2 text-2xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-100">Jobs</p>
                       {searchResults.jobs.map(j => (
                         <button
                           key={j._id}
                           onClick={() => { navigate('/jobs'); setShowSearchDropdown(false); setSearchQuery(''); }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-3"
+                          className="w-full px-4 py-2.5 text-left hover:bg-zinc-50 flex items-center gap-3 transition-colors"
                         >
-                          <Briefcase className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <Briefcase className="w-4 h-4 text-zinc-400 flex-shrink-0" />
                           <div>
-                            <p className="text-sm font-medium text-gray-800">{j.title}</p>
-                            <p className="text-xs text-gray-500">{j.location} · {j.seniority}</p>
+                            <p className="text-sm font-medium text-zinc-800">{j.title}</p>
+                            <p className="text-xs text-zinc-400">{j.location} · {j.seniority}</p>
                           </div>
                         </button>
                       ))}
@@ -178,57 +169,62 @@ export const Navbar = () => {
           )}
         </div>
 
-        {/* Right Section */}
-        <div className="flex items-center gap-4">
+        {/* Right section */}
+        <div className="flex items-center gap-1 ml-auto">
 
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setShowNotifications(v => !v)}
-              className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              aria-label="View recent activity"
+              className="relative p-2 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors"
             >
               <Bell className="w-5 h-5" />
               {recentApps.length > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                  <h3 className="text-sm font-semibold text-gray-800">Recent Activity</h3>
-                  <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600">
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-zinc-200 rounded-xl shadow-modal z-50 animate-slide-up">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
+                  <h3 className="text-sm font-semibold text-zinc-800">Recent Activity</h3>
+                  <button
+                    onClick={() => setShowNotifications(false)}
+                    aria-label="Close notifications"
+                    className="text-zinc-400 hover:text-zinc-600 p-1 rounded transition-colors"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
                 {recentApps.length === 0 ? (
-                  <p className="px-4 py-6 text-sm text-gray-500 text-center">No recent activity</p>
+                  <p className="px-4 py-6 text-sm text-zinc-400 text-center">No recent activity</p>
                 ) : (
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-zinc-50">
                     {recentApps.map(app => (
                       <div key={app._id} className="px-4 py-3">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-800 truncate">
+                            <p className="text-sm font-medium text-zinc-800 truncate">
                               {app.candidateId?.name || app.candidate?.name || 'Unknown'}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-zinc-400 truncate">
                               {app.jobId?.title || app.job?.title || 'Unknown Job'}
                             </p>
                           </div>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${STAGE_COLORS[app.stage] || 'bg-gray-100 text-gray-600'}`}>
+                          <Badge variant={stageToBadgeVariant(app.stage)} size="sm">
                             {app.stage}
-                          </span>
+                          </Badge>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">{timeAgo(app.createdAt)}</p>
+                        <p className="text-xs text-zinc-400 mt-1">{timeAgo(app.createdAt)}</p>
                       </div>
                     ))}
                   </div>
                 )}
-                <div className="px-4 py-2 border-t border-gray-100">
+                <div className="px-4 py-2.5 border-t border-zinc-100">
                   <button
                     onClick={() => { navigate('/applications'); setShowNotifications(false); }}
-                    className="text-xs text-blue-600 hover:underline"
+                    className="text-xs text-brand-600 hover:text-brand-700 font-medium transition-colors"
                   >
                     View all applications →
                   </button>
@@ -240,7 +236,8 @@ export const Navbar = () => {
           {/* Settings */}
           <button
             onClick={() => navigate('/profile')}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            aria-label="Go to profile settings"
+            className="p-2 text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors"
           >
             <Settings className="w-5 h-5" />
           </button>
@@ -249,34 +246,36 @@ export const Navbar = () => {
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 pl-3 pr-2 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Open user menu"
+              aria-expanded={showUserMenu}
+              className="flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 hover:bg-zinc-100 rounded-lg transition-colors ml-1"
             >
-              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                {initial}
               </div>
               <div className="text-left hidden md:block">
-                <p className="text-sm font-medium text-gray-800">{user?.name || 'User'}</p>
-                <p className="text-xs text-gray-500">{user?.role || 'Member'}</p>
+                <p className="text-sm font-medium text-zinc-800 leading-tight">{user?.name || 'User'}</p>
+                <p className="text-xs text-zinc-400 leading-tight">{user?.role || 'Member'}</p>
               </div>
-              <ChevronDown className="w-4 h-4 text-gray-600" />
+              <ChevronDown className="w-4 h-4 text-zinc-400" />
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-modal border border-zinc-200 py-1 z-50 animate-slide-up">
                 <button
                   onClick={() => { setShowUserMenu(false); navigate('/profile'); }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full px-4 py-2.5 text-left text-sm text-zinc-700 hover:bg-zinc-50 flex items-center gap-2 transition-colors"
                 >
                   <User className="w-4 h-4" />
                   Profile
                 </button>
-                <div className="border-t border-gray-200 my-1"></div>
+                <div className="border-t border-zinc-100 my-1" />
                 <button
                   onClick={handleLogout}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
-                  Logout
+                  Sign out
                 </button>
               </div>
             )}

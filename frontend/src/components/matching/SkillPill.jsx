@@ -1,20 +1,12 @@
-// src/components/matching/SkillPill.jsx
 export const SkillPill = ({ skill, type }) => {
-  const getStyle = () => {
-    switch (type) {
-      case 'required':
-        return 'bg-red-100 text-red-800 border-red-300';
-      case 'operational':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'hygiene':
-        return 'bg-green-100 text-green-800 border-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
+  const styles = {
+    required:    'bg-red-50 text-red-700 border-red-200',
+    operational: 'bg-brand-50 text-brand-700 border-brand-200',
+    hygiene:     'bg-green-50 text-green-700 border-green-200',
   };
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStyle()}`}>
+    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${styles[type] || 'bg-zinc-100 text-zinc-700 border-zinc-200'}`}>
       {skill}
     </span>
   );

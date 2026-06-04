@@ -1,15 +1,14 @@
-// src/components/matching/JobSelector.jsx
 import { useState, useEffect } from 'react';
-import { Briefcase, MapPin, DollarSign } from 'lucide-react';
+import { Briefcase, MapPin } from 'lucide-react';
 import apiClient from '../../api/client';
+import Spinner from '../ui/Spinner';
 
 const JobSelector = ({ selectedJob, onSelect }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetchJobs();
-  }, []);
+  useEffect(() => { fetchJobs(); }, []);
 
   const fetchJobs = async () => {
     try {
@@ -25,60 +24,85 @@ const JobSelector = ({ selectedJob, onSelect }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <Spinner size="sm" />
       </div>
     );
   }
 
+  if (!jobs.length) {
+    return (
+      <div className="p-6 text-center text-sm text-zinc-400">No jobs available</div>
+    );
+  }
+
+  const filteredJobs = jobs.filter(j =>
+    j.title.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className="divide-y divide-gray-200">
-      {jobs.map((job) => (
-        <div
+    <div className="divide-y divide-zinc-100">
+      <div className="p-2">
+        <input
+          type="text"
+          placeholder="Search jobs…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white"
+        />
+      </div>
+      {filteredJobs.map(job => (
+        <button
           key={job._id}
           onClick={() => onSelect(job)}
-          className={`p-4 cursor-pointer hover:bg-blue-50 transition-colors ${
-            selectedJob?._id === job._id ? 'bg-blue-100 border-l-4 border-blue-600' : ''
+          className={`w-full text-left p-4 transition-colors ${
+            selectedJob?._id === job._id
+              ? 'bg-brand-50 border-l-2 border-brand-600'
+              : 'hover:bg-zinc-50 border-l-2 border-transparent'
           }`}
         >
-          <h3 className="font-semibold text-gray-800 mb-2">{job.title}</h3>
-          <div className="space-y-1 text-sm text-gray-600">
+          <p className="text-sm font-semibold text-zinc-800 mb-1">{job.title}</p>
+          <div className="space-y-0.5 text-xs text-zinc-500">
             {job.location && (
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>{job.location}</span>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3 h-3" />
+                {job.location}
               </div>
             )}
             {job.seniority && (
-              <div className="flex items-center gap-2">
-                <Briefcase className="w-4 h-4" />
-                <span>{job.seniority}</span>
+              <div className="flex items-center gap-1.5">
+                <Briefcase className="w-3 h-3" />
+                {job.seniority}
               </div>
             )}
           </div>
           {job.requiredSkills?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {job.requiredSkills.slice(0, 3).map((skill, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs"
-                >
+                <span key={idx} className="px-1.5 py-0.5 bg-zinc-100 text-zinc-600 rounded text-xs">
                   {skill}
                 </span>
               ))}
               {job.requiredSkills.length > 3 && (
-                <span className="px-2 py-0.5 text-gray-500 text-xs">
-                  +{job.requiredSkills.length - 3} more
-                </span>
+                <span className="text-zinc-400 text-xs">+{job.requiredSkills.length - 3}</span>
               )}
             </div>
           )}
-        </div>
+          {job.operationalSkills?.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {job.operationalSkills.slice(0, 3).map((skill, idx) => (
+                <span key={idx} className="px-1.5 py-0.5 bg-brand-50 text-brand-600 rounded text-xs">
+                  {skill}
+                </span>
+              ))}
+              {job.operationalSkills.length > 3 && (
+                <span className="text-brand-400 text-xs">+{job.operationalSkills.length - 3}</span>
+              )}
+            </div>
+          )}
+        </button>
       ))}
-      
-      {jobs.length === 0 && (
-        <div className="p-8 text-center text-gray-500">
-          No jobs available
-        </div>
+      {filteredJobs.length === 0 && search && (
+        <div className="p-6 text-center text-sm text-zinc-400">No jobs match.</div>
       )}
     </div>
   );

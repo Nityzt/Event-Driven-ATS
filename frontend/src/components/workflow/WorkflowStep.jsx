@@ -57,7 +57,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
         </div>
 
         {/* Step Icon */}
-        <div className="flex-shrink-0 mt-1 text-blue-600">
+        <div className="flex-shrink-0 mt-1 text-brand-600">
           {getStepIcon()}
         </div>
 
@@ -86,7 +86,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                   type="text"
                   value={step.config.subject || ''}
                   onChange={(e) => updateConfig('subject', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="Email subject"
                 />
               </div>
@@ -97,7 +97,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                 <textarea
                   value={step.config.message || ''}
                   onChange={(e) => updateConfig('message', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   rows="4"
                   placeholder="Use {{candidate.name}}, {{job.title}}, etc."
                 />
@@ -116,7 +116,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
               <textarea
                 value={step.config.message || ''}
                 onChange={(e) => updateConfig('message', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 rows="3"
                 placeholder="Use {{candidate.name}}, {{candidate.phone}}, etc."
               />
@@ -136,7 +136,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                   type="number"
                   value={step.config.duration || 24}
                   onChange={(e) => updateConfig('duration', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   min="1"
                 />
               </div>
@@ -147,7 +147,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                 <select
                   value={step.config.unit || 'hours'}
                   onChange={(e) => updateConfig('unit', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 >
                   <option value="minutes">Minutes</option>
                   <option value="hours">Hours</option>
@@ -167,7 +167,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                   type="url"
                   value={step.config.url || ''}
                   onChange={(e) => updateConfig('url', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="https://example.com/webhook"
                 />
               </div>
@@ -179,7 +179,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                   <select
                     value={step.config.method || 'POST'}
                     onChange={(e) => updateConfig('method', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   >
                     <option value="GET">GET</option>
                     <option value="POST">POST</option>
@@ -194,7 +194,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                   <textarea
                     value={step.config.payload || '{}'}
                     onChange={(e) => updateConfig('payload', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                     rows="2"
                   />
                 </div>

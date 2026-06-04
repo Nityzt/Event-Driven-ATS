@@ -1,5 +1,5 @@
-// src/components/common/ProtectedRoute.jsx
 import { Navigate } from 'react-router-dom';
+import { ShieldOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const ProtectedRoute = ({ children, roles = [] }) => {
@@ -9,14 +9,16 @@ const ProtectedRoute = ({ children, roles = [] }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Check role-based access
   if (roles.length > 0 && !roles.includes(user.role)) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-          <h2 className="text-xl font-semibold text-red-800 mb-2">Access Denied</h2>
-          <p className="text-red-600">
-            You don't have permission to access this page. Required role(s): {roles.join(', ')}
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <div className="bg-white rounded-xl border border-zinc-200 shadow-card p-8 max-w-sm w-full text-center">
+          <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <ShieldOff className="w-6 h-6 text-red-500" />
+          </div>
+          <h2 className="text-base font-semibold text-zinc-900 mb-1">Access Denied</h2>
+          <p className="text-sm text-zinc-500">
+            This page requires the <span className="font-medium text-zinc-700">{roles.join(' or ')}</span> role.
           </p>
         </div>
       </div>

@@ -39,9 +39,9 @@ const StepPalette = ({ onAddStep }) => {
             <button
               key={step.type}
               onClick={() => onAddStep(step.type)}
-              className="flex flex-col items-center gap-2 p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+              className="flex flex-col items-center gap-2 p-4 bg-white border border-gray-200 rounded-lg hover:border-brand-400 hover:bg-brand-50 transition-colors"
             >
-              <Icon className="w-6 h-6 text-blue-600" />
+              <Icon className="w-6 h-6 text-brand-600" />
               <div className="text-center">
                 <p className="font-medium text-sm text-gray-800">{step.label}</p>
                 <p className="text-xs text-gray-500">{step.description}</p>

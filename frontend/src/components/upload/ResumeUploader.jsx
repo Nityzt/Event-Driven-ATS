@@ -107,16 +107,16 @@ const ResumeUploader = ({ onFileSelect, existingFile = null, error = null }) => 
           className={`
             border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
             transition-colors
-            ${dragActive 
-              ? 'border-blue-500 bg-blue-50' 
-              : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+            ${dragActive
+              ? 'border-brand-500 bg-brand-50'
+              : 'border-zinc-300 hover:border-zinc-400 bg-zinc-50'
             }
             ${(uploadError || error) ? 'border-red-300 bg-red-50' : ''}
           `}
         >
           <Upload className={`
             w-12 h-12 mx-auto mb-4
-            ${dragActive ? 'text-blue-500' : 'text-gray-400'}
+            ${dragActive ? 'text-brand-500' : 'text-zinc-400'}
           `} />
           
           <p className="text-sm font-medium text-gray-700 mb-1">
@@ -130,8 +130,8 @@ const ResumeUploader = ({ onFileSelect, existingFile = null, error = null }) => 
         <div className="border border-gray-300 rounded-lg p-4 bg-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded">
-                <FileText className="w-6 h-6 text-blue-600" />
+              <div className="p-2 bg-brand-100 rounded-lg">
+                <FileText className="w-6 h-6 text-brand-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-800">

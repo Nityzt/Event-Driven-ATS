@@ -1,48 +1,41 @@
-// src/components/matching/MatchingScreen.jsx
 import { useState, useEffect } from 'react';
-import { Search, Filter, TrendingUp, TrendingDown } from 'lucide-react';
+import { Search, Filter, RefreshCw, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import toast from 'react-hot-toast';
 import JobSelector from './JobSelector';
 import CandidateList from './CandidateList';
 import apiClient from '../../api/client';
 import useDebounce from '../../hooks/useDebounce';
+import Spinner from '../ui/Spinner';
+import Button from '../ui/Button';
 
 const MatchingScreen = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
-    search: '',
-    location: '',
-    seniority: '',
-    minScore: 0
-  });
-  const [sortBy, setSortBy] = useState('score'); // score | recency
+  const [filters, setFilters] = useState({ search: '', location: '', seniority: '', minScore: 0 });
+  const [sortBy, setSortBy] = useState('score');
+  const [jobPanelOpen, setJobPanelOpen] = useState(window.innerWidth >= 1024);
 
   const debouncedSearch = useDebounce(filters.search, 500);
 
   useEffect(() => {
-    if (selectedJob) {
-      fetchMatches();
-    }
+    if (selectedJob) fetchMatches();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJob, debouncedSearch, filters.location, filters.seniority, filters.minScore, sortBy]);
 
   const fetchMatches = async () => {
     if (!selectedJob) return;
-
     setLoading(true);
     try {
       const params = {
-        jobId: selectedJob._id,
         ...(debouncedSearch && { search: debouncedSearch }),
         ...(filters.location && { location: filters.location }),
         ...(filters.seniority && { seniority: filters.seniority }),
         ...(filters.minScore > 0 && { minScore: filters.minScore }),
-        sortBy
+        sortBy,
       };
-
       const response = await apiClient.get(`/matches/job/${selectedJob._id}`, { params });
-      setMatches(response.data?.matches || []);
+      setMatches(response.matches || []);
     } catch (error) {
       console.error('Failed to fetch matches:', error);
       setMatches([]);
@@ -51,149 +44,150 @@ const MatchingScreen = () => {
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
+  const handleFilterChange = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
 
   const handleRunMatch = async () => {
     if (!selectedJob) return;
-
     setLoading(true);
     try {
       await apiClient.post('/matches/recalculate/job/' + selectedJob._id);
       await fetchMatches();
+      toast.success('Matching recalculated');
     } catch (error) {
-      console.error('Failed to run matching:', error);
-      alert(`Failed to run matching: ${error.message}`);
+      toast.error(`Failed to run matching: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* Left Panel: Job Selector */}
-      <div className="w-1/3 bg-white border-r border-gray-200 overflow-y-auto">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Select Job</h2>
+      <div
+        className={`${jobPanelOpen ? 'w-72' : 'w-0'} flex-shrink-0 bg-white border-r border-zinc-200 flex flex-col overflow-hidden transition-[width] duration-200`}
+      >
+        <div className="px-4 py-3 border-b border-zinc-100 flex-shrink-0">
+          <h2 className="text-sm font-semibold text-zinc-700">Select Job</h2>
         </div>
-        <JobSelector
-          selectedJob={selectedJob}
-          onSelect={setSelectedJob}
-        />
+        <div className="flex-1 overflow-y-auto custom-scrollbar min-w-[288px]">
+          <JobSelector selectedJob={selectedJob} onSelect={setSelectedJob} />
+        </div>
       </div>
 
-      {/* Right Panel: Candidates & Filters */}
-      <div className="flex-1 flex flex-col">
+      {/* Right Panel */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header & Filters */}
-        <div className="bg-white border-b border-gray-200 p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800">
-              {selectedJob ? `Matching for: ${selectedJob.title}` : 'Select a job to view matches'}
-            </h2>
-            {selectedJob && (
+        <div className="bg-white border-b border-zinc-200 px-5 py-4 space-y-3 flex-shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <button
-                onClick={handleRunMatch}
-                disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                onClick={() => setJobPanelOpen(o => !o)}
+                aria-label={jobPanelOpen ? 'Collapse job list' : 'Expand job list'}
+                className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-zinc-600 transition-colors flex-shrink-0"
               >
-                {loading ? 'Running...' : 'Run Match'}
+                {jobPanelOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
               </button>
+              <h2 className="text-sm font-semibold text-zinc-800 truncate">
+                {selectedJob ? `Matches — ${selectedJob.title}` : 'Select a job to view matches'}
+              </h2>
+            </div>
+            {selectedJob && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                loading={loading}
+                onClick={handleRunMatch}
+              >
+                Run Match
+              </Button>
             )}
           </div>
 
           {selectedJob && (
-            <div className="grid grid-cols-4 gap-3">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  placeholder="Search candidates..."
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+                  <input
+                    type="text"
+                    value={filters.search}
+                    onChange={e => handleFilterChange('search', e.target.value)}
+                    placeholder="Search candidates…"
+                    className="w-full pl-9 pr-3 py-1.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  />
+                </div>
+                <select
+                  value={filters.location}
+                  onChange={e => handleFilterChange('location', e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="">All Locations</option>
+                  <option>Remote</option>
+                  <option>New York</option>
+                  <option>San Francisco</option>
+                  <option>London</option>
+                  <option>Toronto</option>
+                </select>
+                <select
+                  value={filters.seniority}
+                  onChange={e => handleFilterChange('seniority', e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="">All Seniority</option>
+                  <option>Entry</option>
+                  <option>Mid</option>
+                  <option>Senior</option>
+                  <option>Lead</option>
+                  <option>Principal</option>
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                >
+                  <option value="score">Sort by Score</option>
+                  <option value="recency">Sort by Recency</option>
+                </select>
               </div>
 
-              {/* Location Filter */}
-              <select
-                value={filters.location}
-                onChange={(e) => handleFilterChange('location', e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">All Locations</option>
-                <option value="Remote">Remote</option>
-                <option value="New York">New York</option>
-                <option value="San Francisco">San Francisco</option>
-                <option value="London">London</option>
-                <option value="Toronto">Toronto</option>
-              </select>
-
-              {/* Seniority Filter */}
-              <select
-                value={filters.seniority}
-                onChange={(e) => handleFilterChange('seniority', e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">All Seniority</option>
-                <option value="Entry">Entry</option>
-                <option value="Mid">Mid</option>
-                <option value="Senior">Senior</option>
-                <option value="Lead">Lead</option>
-                <option value="Principal">Principal</option>
-              </select>
-
-              {/* Sort */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="score">Sort by Score</option>
-                <option value="recency">Sort by Recency</option>
-              </select>
-            </div>
-          )}
-
-          {selectedJob && (
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm">
-                <Filter className="w-4 h-4 text-gray-500" />
-                <span className="text-gray-700">Min Score:</span>
+              <label className="flex items-center gap-2 text-xs text-zinc-600">
+                <Filter className="w-3.5 h-3.5 text-zinc-400" />
+                Min Score:
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={filters.minScore}
-                  onChange={(e) => handleFilterChange('minScore', parseInt(e.target.value))}
-                  className="w-32"
+                  onChange={e => handleFilterChange('minScore', parseInt(e.target.value))}
+                  aria-label="Minimum match score"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={filters.minScore}
+                  className="w-28 accent-brand-600"
                 />
-                <span className="font-medium text-gray-800">{filters.minScore}%</span>
+                <span className="font-semibold text-zinc-800 tabular-nums w-8">{filters.minScore}%</span>
               </label>
-            </div>
+            </>
           )}
         </div>
 
         {/* Candidate List */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
           {!selectedJob ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500">Select a job to view matching candidates</p>
+              <p className="text-sm text-zinc-400">Select a job from the left panel to view matching candidates</p>
             </div>
           ) : loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <Spinner size="lg" />
             </div>
           ) : matches.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500">No matches found. Try adjusting filters or run matching.</p>
+              <p className="text-sm text-zinc-400">No matches found. Try adjusting filters or click Run Match.</p>
             </div>
           ) : (
-            <CandidateList
-              matches={matches}
-              job={selectedJob}
-            />
+            <CandidateList matches={matches} job={selectedJob} />
           )}
         </div>
       </div>

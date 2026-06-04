@@ -1,98 +1,90 @@
-// src/components/matching/CandidateList.jsx
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import ScoreBar from './ScoreBar';
 import SkillPill from './SkillPill';
+import Badge from '../ui/Badge';
+
+const QUALITY_VARIANT = {
+  excellent: 'success',
+  good:      'info',
+  fair:      'warning',
+  poor:      'danger',
+};
 
 const CandidateList = ({ matches }) => {
   const [expandedCandidate, setExpandedCandidate] = useState(null);
 
-  const toggleExpand = (candidateId) => {
-    setExpandedCandidate(expandedCandidate === candidateId ? null : candidateId);
-  };
-
   return (
-    <div className="space-y-4">
-      {matches.map((match) => {
+    <div className="space-y-3">
+      {matches.map(match => {
         const isExpanded = expandedCandidate === match.candidate._id;
         const candidate = match.candidate;
+        const score = match.overallScore ?? match.score ?? 0;
 
         return (
-          <div
-            key={match._id}
-            className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-          >
-            {/* Main Card */}
+          <div key={match._id} className="bg-white rounded-xl border border-zinc-200 shadow-card overflow-hidden">
             <div className="p-4">
               <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {candidate.name}
-                  </h3>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                    {candidate.email && (
-                      <div className="flex items-center gap-1">
-                        <Mail className="w-4 h-4" />
-                        <span>{candidate.email}</span>
-                      </div>
-                    )}
-                    {candidate.phone && (
-                      <div className="flex items-center gap-1">
-                        <Phone className="w-4 h-4" />
-                        <span>{candidate.phone}</span>
-                      </div>
-                    )}
-                    {candidate.location && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{candidate.location}</span>
-                      </div>
-                    )}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 text-sm font-semibold flex-shrink-0">
+                    {candidate.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-zinc-900">{candidate.name}</p>
+                      {match.matchQuality && (
+                        <Badge variant={QUALITY_VARIANT[match.matchQuality] || 'default'} size="sm">
+                          {match.matchQuality}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 mt-0.5 text-xs text-zinc-500">
+                      {candidate.email && (
+                        <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{candidate.email}</span>
+                      )}
+                      {candidate.phone && (
+                        <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{candidate.phone}</span>
+                      )}
+                      {candidate.location && (
+                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{candidate.location}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Score */}
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {Math.round(match.score)}%
-                  </div>
-                  <ScoreBar score={match.score} />
+                <div className="text-right flex-shrink-0 ml-3">
+                  <div className="text-xl font-bold text-brand-600">{Math.round(score)}%</div>
+                  <ScoreBar score={score} />
                 </div>
               </div>
 
-              {/* Skills */}
               <div className="space-y-2">
-                {/* Required Skills */}
                 {match.matchedSkills?.required?.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-gray-600 mb-1">Required Skills</p>
-                    <div className="flex flex-wrap gap-2">
+                    <p className="text-xs font-medium text-zinc-500 mb-1">Required Skills</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {match.matchedSkills.required.map((skill, idx) => (
                         <SkillPill key={idx} skill={skill} type="required" />
                       ))}
                     </div>
                   </div>
                 )}
-
-                {/* Operational Skills */}
                 {match.matchedSkills?.operational?.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-gray-600 mb-1">Operational Skills</p>
-                    <div className="flex flex-wrap gap-2">
+                    <p className="text-xs font-medium text-zinc-500 mb-1">Operational Skills</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {match.matchedSkills.operational.map((skill, idx) => (
                         <SkillPill key={idx} skill={skill} type="operational" />
                       ))}
                     </div>
                   </div>
                 )}
-
-                {/* Hygiene Skills */}
                 {match.matchedSkills?.hygiene?.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-gray-600 mb-1">
+                    <p className="text-xs font-medium text-zinc-500 mb-1">
                       Hygiene Skills <span className="text-green-600">(+5% each)</span>
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {match.matchedSkills.hygiene.map((skill, idx) => (
                         <SkillPill key={idx} skill={skill} type="hygiene" />
                       ))}
@@ -101,41 +93,30 @@ const CandidateList = ({ matches }) => {
                 )}
               </div>
 
-              {/* Expand/Collapse Button */}
               <button
-                onClick={() => toggleExpand(candidate._id)}
-                className="mt-3 text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                onClick={() => setExpandedCandidate(isExpanded ? null : candidate._id)}
+                className="mt-3 text-xs text-brand-600 hover:text-brand-700 flex items-center gap-1 transition-colors"
               >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="w-4 h-4" />
-                    Show Less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-4 h-4" />
-                    Show More
-                  </>
-                )}
+                {isExpanded
+                  ? <><ChevronUp className="w-3.5 h-3.5" />Show Less</>
+                  : <><ChevronDown className="w-3.5 h-3.5" />Show More</>
+                }
               </button>
             </div>
 
-            {/* Expanded Details */}
             {isExpanded && (
-              <div className="border-t border-gray-200 p-4 bg-gray-50 space-y-3">
-                {/* Experience */}
+              <div className="border-t border-zinc-100 p-4 bg-zinc-50 space-y-3">
                 {candidate.experience?.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-gray-800 mb-2">Experience</h4>
+                    <p className="text-xs font-semibold text-zinc-700 mb-2">Experience</p>
                     <div className="space-y-2">
                       {candidate.experience.map((exp, idx) => (
-                        <div key={idx} className="text-sm">
-                          <p className="font-medium text-gray-800">{exp.title}</p>
-                          <p className="text-gray-600">{exp.company}</p>
+                        <div key={idx} className="text-xs">
+                          <p className="font-medium text-zinc-800">{exp.title}</p>
+                          <p className="text-zinc-500">{exp.company}</p>
                           {exp.duration && (
-                            <p className="text-gray-500 text-xs flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {exp.duration}
+                            <p className="text-zinc-400 flex items-center gap-1 mt-0.5">
+                              <Calendar className="w-3 h-3" />{exp.duration}
                             </p>
                           )}
                         </div>
@@ -144,16 +125,12 @@ const CandidateList = ({ matches }) => {
                   </div>
                 )}
 
-                {/* All Skills */}
                 {candidate.skills?.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-gray-800 mb-2">All Skills</h4>
-                    <div className="flex flex-wrap gap-2">
+                    <p className="text-xs font-semibold text-zinc-700 mb-2">All Skills</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {candidate.skills.map((skill, idx) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs"
-                        >
+                        <span key={idx} className="px-2 py-0.5 bg-zinc-200 text-zinc-600 rounded-full text-xs">
                           {skill}
                         </span>
                       ))}
@@ -161,39 +138,51 @@ const CandidateList = ({ matches }) => {
                   </div>
                 )}
 
-                {/* Resume Link */}
-                {candidate.resume && (
+                {(match.missingSkills?.required?.length > 0 || match.missingSkills?.operational?.length > 0) && (
                   <div>
-                    <a
-                      href={candidate.resume}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800 underline"
-                    >
-                      View Resume
-                    </a>
+                    <p className="text-xs font-semibold text-zinc-700 mb-2">Missing Skills</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[...(match.missingSkills.required || []), ...(match.missingSkills.operational || [])].map((skill, idx) => (
+                        <span key={idx} className="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs line-through">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* Match Breakdown */}
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-2">Score Breakdown</h4>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Base Match:</span>
-                      <span className="font-medium">{Math.round(match.baseScore || match.score)}%</span>
-                    </div>
+                  <p className="text-xs font-semibold text-zinc-700 mb-2">Score Breakdown</p>
+                  <div className="space-y-1 text-xs">
+                    {match.breakdown && (
+                      <>
+                        <div className="flex justify-between text-zinc-600">
+                          <span>Skills (50%)</span>
+                          <span>{Math.round(match.breakdown.skillsScore)}%</span>
+                        </div>
+                        <div className="flex justify-between text-zinc-600">
+                          <span>Experience (30%)</span>
+                          <span>{Math.round(match.breakdown.experienceScore)}%</span>
+                        </div>
+                        <div className="flex justify-between text-zinc-600">
+                          <span>Location (10%)</span>
+                          <span>{Math.round(match.breakdown.locationScore)}%</span>
+                        </div>
+                        <div className="flex justify-between text-zinc-600">
+                          <span>Education (10%)</span>
+                          <span>{Math.round(match.breakdown.educationScore)}%</span>
+                        </div>
+                      </>
+                    )}
                     {match.matchedSkills?.hygiene?.length > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Hygiene Bonus:</span>
-                        <span className="font-medium text-green-600">
-                          +{match.matchedSkills.hygiene.length * 5}%
-                        </span>
+                      <div className="flex justify-between text-zinc-600">
+                        <span>Hygiene Bonus</span>
+                        <span className="text-green-600">+{match.matchedSkills.hygiene.length * 5}%</span>
                       </div>
                     )}
-                    <div className="flex justify-between border-t pt-1 mt-1">
-                      <span className="font-semibold text-gray-800">Final Score:</span>
-                      <span className="font-bold text-blue-600">{Math.round(match.score)}%</span>
+                    <div className="flex justify-between border-t border-zinc-200 pt-1 mt-1 font-semibold text-zinc-800">
+                      <span>Overall</span>
+                      <span className="text-brand-600">{Math.round(score)}%</span>
                     </div>
                   </div>
                 </div>
