@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Run = require('../models/Run');
 const Workflow = require('../models/Workflow');
+const AuditLog = require('../models/AuditLog');
 const { authenticate, authorize } = require('../middleware/auth');
 const { executeRun } = require('../services/workflowEngine');
 const agenda = require('../config/agenda');
@@ -62,8 +63,21 @@ router.post('/:id/pause', authenticate, authorize('Recruiter', 'Admin'), async (
     // Cancel any pending Agenda resume job for this run
     await agenda.cancel({ 'data.runId': req.params.id });
 
+    const oldState = run.state;
     run.state = 'paused';
     await run.save();
+
+    // Audit log
+    await AuditLog.create({
+      user: req.user._id,
+      action: 'WORKFLOW_STATE_CHANGE',
+      resource: 'Run',
+      resourceId: run._id,
+      changes: { before: { state: oldState }, after: { state: 'paused' } },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      correlationId: req.correlationId || run.correlationId
+    });
 
     res.json({ success: true, data: { state: run.state } });
   } catch (err) {
@@ -85,8 +99,21 @@ router.post('/:id/resume', authenticate, authorize('Recruiter', 'Admin'), async 
       return res.status(404).json({ success: false, error: 'Associated workflow not found' });
     }
 
+    const oldState = run.state;
     run.state = 'queued';
     await run.save();
+
+    // Audit log
+    await AuditLog.create({
+      user: req.user._id,
+      action: 'WORKFLOW_STATE_CHANGE',
+      resource: 'Run',
+      resourceId: run._id,
+      changes: { before: { state: oldState }, after: { state: 'queued' } },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      correlationId: req.correlationId || run.correlationId
+    });
 
     // Resume execution with empty context (templates will fall back to {{var}} when context missing)
     const context = req.body.context || {};
@@ -111,8 +138,21 @@ router.post('/:id/cancel', authenticate, authorize('Recruiter', 'Admin'), async 
 
     await agenda.cancel({ 'data.runId': req.params.id });
 
+    const oldState = run.state;
     run.state = 'cancelled';
     await run.save();
+
+    // Audit log
+    await AuditLog.create({
+      user: req.user._id,
+      action: 'WORKFLOW_STATE_CHANGE',
+      resource: 'Run',
+      resourceId: run._id,
+      changes: { before: { state: oldState }, after: { state: 'cancelled' } },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      correlationId: req.correlationId || run.correlationId
+    });
 
     res.json({ success: true, data: { state: run.state } });
   } catch (err) {

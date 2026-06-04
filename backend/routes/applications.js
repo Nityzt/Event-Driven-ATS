@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const {
   getApplications,
   getApplication,
@@ -10,6 +11,22 @@ const {
 } = require('../controllers/applicationController');
 const { authenticate, authorize } = require('../middleware/auth');
 const eventEmitter = require('../services/eventEmitter');
+
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+  next();
+};
+
+const applicationCreateRules = [
+  body('candidateId').notEmpty().withMessage('candidateId is required'),
+  body('jobId').notEmpty().withMessage('jobId is required')
+];
+
+const applicationUpdateRules = [
+  body('stage').optional().isIn(['Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected'])
+    .withMessage('invalid stage value')
+];
 
 // All routes require authentication
 router.use(authenticate);
@@ -58,8 +75,10 @@ router.get('/:id/timeline/stream', authenticate, (req, res) => {
 
 // POST create application - Recruiter or Admin
 router.post(
-  '/', 
+  '/',
   authorize('Recruiter', 'Admin'),
+  applicationCreateRules,
+  validate,
   createApplication
 );
 
@@ -67,6 +86,8 @@ router.post(
 router.patch(
   '/:id',
   authorize('Recruiter', 'Admin'),
+  applicationUpdateRules,
+  validate,
   updateApplication
 );
 
