@@ -1,6 +1,6 @@
-# Event-Driven ATS
+# TalentFlow — Event-Driven ATS
 
-A full-stack Applicant Tracking System built on the MERN stack, featuring a custom event-driven workflow automation engine with real-time Server-Sent Events, MongoDB-backed job scheduling via Agenda, JWT/RBAC authentication, and a visual workflow builder.
+A full-stack Applicant Tracking System built on the MERN stack, featuring a custom event-driven workflow automation engine with real-time Server-Sent Events, MongoDB-backed job scheduling via Agenda, JWT/RBAC authentication, a visual workflow builder, and a polished production-ready UI with a custom design system.
 
 ---
 
@@ -19,6 +19,9 @@ A full-stack Applicant Tracking System built on the MERN stack, featuring a cust
 | **Profile** | View account info; self-service password change |
 | **Metrics** | In-memory counters at `GET /metrics` — runs started, emails sent, SMS sent, webhook retries |
 | **Security** | Helmet, CORS, rate limiting (100/15 min general, 10/15 min auth), JWT access + refresh tokens, RBAC |
+| **Onboarding** | First-time user wizard walks through features and role-conditional quick-start links |
+| **Global Search** | Navbar search bar — debounced live search across candidates and jobs with an inline dropdown |
+| **Notifications** | Navbar bell — recent-applications feed with stage badges and time-ago formatting |
 
 ---
 
@@ -26,7 +29,10 @@ A full-stack Applicant Tracking System built on the MERN stack, featuring a cust
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, Vite, Tailwind CSS, React Router v6, @dnd-kit (drag-and-drop) |
+| Frontend | React 18, Vite, Tailwind CSS 3, React Router v6, @dnd-kit (drag-and-drop) |
+| UI Library | Custom component library — Button, Input, Select, Card, Badge, Modal, Skeleton, EmptyState, Spinner, PageHeader |
+| Styling | Inter font, indigo design tokens (`brand.*`), Zinc neutrals, `cn()` via clsx + tailwind-merge |
+| Toasts | react-hot-toast (replaces all `alert()`/`confirm()` dialogs) |
 | Backend | Node.js 20, Express 5, Mongoose 9 |
 | Database | MongoDB 7 |
 | Job Scheduling | Agenda (MongoDB-backed, `agendaJobs` collection) |
@@ -89,29 +95,43 @@ event-driven-ats/
 │   │   ├── workflowJobs.js    # Agenda job definitions (incl. resume-run)
 │   │   └── workflowListener.js
 │   ├── tests/
-│   │   ├── api.test.js        # 16 integration tests
-│   │   ├── matchingEngine.test.js
+│   │   ├── api.test.js        # 18 integration tests
 │   │   └── setup.js           # sets env vars before server.js loads
 │   ├── .dockerignore
 │   ├── Dockerfile
 │   ├── package.json
 │   └── server.js
 ├── frontend/
+│   ├── public/
+│   │   └── favicon.svg        # Indigo "T" lettermark SVG
 │   └── src/
 │       ├── api/               # axios wrapper per resource
-│       │   ├── client.js      # axios instance with auth interceptor
+│       │   ├── client.js      # axios instance with auth interceptor (unwraps response.data)
 │       │   ├── index.js       # re-exports all API modules
-│       │   ├── applications.js, auth.js, candidates.js, jobs.js
-│       │   ├── matches.js, runs.js, workflows.js, auditLogs.js
+│       │   └── applications.js, auth.js, candidates.js, jobs.js,
+│       │       matches.js, runs.js, workflows.js, auditLogs.js
 │       ├── components/
+│       │   ├── ui/            # Design system components
+│       │   │   ├── Badge.jsx      # variants + stageToBadgeVariant(), stateToBadgeVariant()
+│       │   │   ├── Button.jsx     # variants: primary|secondary|outline|ghost|danger
+│       │   │   ├── Card.jsx       # padding variants, hover shadow
+│       │   │   ├── EmptyState.jsx # icon + title + description + optional CTA
+│       │   │   ├── Input.jsx      # label, hint, error, icon slots
+│       │   │   ├── Modal.jsx      # portal, focus trap, a11y, animations
+│       │   │   ├── PageHeader.jsx # title + subtitle + right actions slot
+│       │   │   ├── Select.jsx     # same pattern as Input
+│       │   │   ├── Skeleton.jsx   # shimmer presets per page type
+│       │   │   └── Spinner.jsx    # SVG spinner, sizes xs–lg
 │       │   ├── common/        # ErrorBoundary, ProtectedRoute
-│       │   ├── matching/      # MatchingScreen, JobSelector, CandidateList, ScoreBar
+│       │   ├── matching/      # MatchingScreen, JobSelector, CandidateList, ScoreBar, SkillPill
+│       │   ├── onboarding/
+│       │   │   └── OnboardingModal.jsx  # 4-step first-use wizard
 │       │   ├── timeline/      # ApplicationTimeline (SSE), TimelineEvent
 │       │   ├── upload/        # ResumeUploader
 │       │   ├── workflow/      # WorkflowBuilder (dnd-kit), WorkflowStep, WorkflowTrigger, StepPalette
-│       │   ├── Layout.jsx
-│       │   ├── Navbar.jsx
-│       │   └── Sidebar.jsx
+│       │   ├── Layout.jsx     # responsive shell with mobile sidebar overlay
+│       │   ├── Navbar.jsx     # hamburger menu, live search, notifications feed, settings, user menu
+│       │   └── Sidebar.jsx    # mobile drawer + desktop fixed; brand header + nav + user footer
 │       ├── contexts/
 │       │   └── AuthContext.jsx  # login, logout, register, hasRole, isAuthenticated
 │       ├── hooks/
@@ -119,18 +139,21 @@ event-driven-ats/
 │       │   ├── useOptimisticUpdate.js
 │       │   ├── usePagination.js
 │       │   └── useSSE.js      # SSE connection hook
+│       ├── lib/
+│       │   └── utils.js       # cn() = twMerge(clsx(...)) helper
 │       ├── pages/
 │       │   ├── Applications.jsx
 │       │   ├── AuditLogs.jsx
 │       │   ├── Candidates.jsx
 │       │   ├── Dashboard.jsx
 │       │   ├── Jobs.jsx
-│       │   ├── Login.jsx
+│       │   ├── Login.jsx      # split-screen layout (brand panel + form)
 │       │   ├── Matches.jsx
 │       │   ├── Profile.jsx
 │       │   └── Workflows.jsx  # tabs: Workflows | Runs
 │       ├── App.jsx
-│       └── main.jsx
+│       ├── index.css          # Tailwind directives + CSS custom props + skeleton shimmer
+│       └── main.jsx           # React.StrictMode + Toaster
 ├── .dockerignore (frontend)
 ├── Dockerfile (frontend — multi-stage)
 ├── nginx.conf
@@ -250,10 +273,18 @@ SSE timeline: `GET /api/applications/:id/timeline/stream`.
 ### Matching (`/api/matches`)
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/calculate` | Score one candidate against one job |
+| GET | `/` | List all matches; filter by `jobId`, `candidateId`, `minScore`, `quality` |
+| POST | `/calculate` | Score one candidate against one job (save/upsert) |
+| GET | `/score?candidateId=&jobId=` | Calculate score on-the-fly without saving |
 | GET | `/job/:jobId` | Ranked candidates for a job |
 | GET | `/candidate/:candidateId` | Matched jobs for a candidate |
 | POST | `/recalculate/job/:jobId` | Recalculate all matches for a job |
+| POST | `/recalculate/candidate/:candidateId` | Recalculate all matches for a candidate |
+| GET | `/top-candidates/:jobId` | Top `limit` candidates for a job |
+| GET | `/top-jobs/:candidateId` | Top `limit` jobs for a candidate |
+| GET | `/stats/job/:jobId` | Aggregate score stats + quality distribution for a job |
+| GET | `/:matchId` | Single match record |
+| DELETE | `/:matchId` | Delete a match record |
 
 ### Workflows (`/api/workflows`)
 | Method | Path | Access |
@@ -280,9 +311,22 @@ SSE timeline: `GET /api/applications/:id/timeline/stream`.
 ### System endpoints (no `/api` prefix)
 | Path | Notes |
 |---|---|
-| `GET /healthz` | DB connection status |
+| `GET /healthz` | DB connection status — returns `200 OK` (connected) or `500 Server Error` (disconnected) |
 | `GET /metrics` | `{ runs_started, steps_retried, emails_sent, sms_sent }` |
 | `POST /webhook/echo` | Test webhook target — echoes payload |
+
+### API Pagination & Security Extensions
+1. **Cursor-Based Pagination**
+   - Available on `GET /api/candidates` and `GET /api/jobs`.
+   - Provide an optional `cursor` query parameter representing the `_id` of the last document on the previous page.
+   - Response pagination object includes `nextCursor` and `hasMore`.
+   - Reverts to page-offset pagination when `cursor` is omitted.
+2. **Resume Virus Scanning**
+   - Candidate resume uploads automatically execute a mock security/malware scan stub.
+   - Returns `400 Bad Request` and aborts parsing if a threat is detected.
+3. **Request Correlation IDs**
+   - All HTTP requests generate a unique correlation ID via UUID (`X-Correlation-ID` header).
+   - This ID is propagated into audit logs, workflow runs, and individual run step logs.
 
 ---
 
@@ -296,7 +340,7 @@ npm run test:once   # run once with verbose output (CI)
 npm test            # watch mode
 ```
 
-**16 integration tests** cover: auth (register, login, validation, RBAC), workflow CRUD + toggle + preview, matching calculation, application creation, metrics endpoint, health endpoint.
+**18 integration tests** cover: auth (register, login, validation, RBAC), workflow CRUD + toggle + preview, matching calculation, application creation, webhook retry behaviour, rate-limit enforcement, metrics endpoint, health endpoint.
 
 ---
 
@@ -326,6 +370,53 @@ Each step emits an SSE event on `run:log:<applicationId>` so the frontend timeli
 
 ---
 
+## Design System
+
+The frontend uses a custom design system built entirely with Tailwind CSS — no third-party component library.
+
+### Tokens
+| Token | Value | Usage |
+|---|---|---|
+| `brand.600` | `#4f46e5` | Primary buttons, active nav, links |
+| `brand.50–950` | indigo scale | Badge backgrounds, hover states |
+| `surface.DEFAULT` | `#ffffff` | Card backgrounds |
+| `surface.muted` | `#f4f4f5` | Page background, skeleton base |
+| Font | Inter (Google Fonts) | All text |
+
+### Components (`src/components/ui/`)
+- **Button** — variants: `primary` `secondary` `outline` `ghost` `danger`; loading spinner; `leftIcon`/`rightIcon` slots
+- **Input** — label, hint, error text, left/right icon slots; auto-generated aria-describedby
+- **Select** — same API as Input, custom ChevronDown arrow
+- **Card** — padding variants (`none` `sm` `md` `lg`); optional hover shadow transition
+- **Badge** — variants: `default` `success` `warning` `danger` `info` `purple` `brand`; exports `stageToBadgeVariant()` and `stateToBadgeVariant()` helpers
+- **Modal** — React portal, focus trap, Escape to close, body scroll lock, ARIA dialog role
+- **Skeleton** — shimmer animation presets: `StatCardSkeleton`, `JobCardSkeleton`, `CandidateCardSkeleton`, `TableRowSkeleton`
+- **EmptyState** — icon + title + description + optional primary CTA button
+- **Spinner** — SVG-based, sizes `xs` `sm` `md` `lg`
+- **PageHeader** — title + subtitle + right-aligned actions slot
+
+### `cn()` helper (`src/lib/utils.js`)
+```js
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+export function cn(...inputs) { return twMerge(clsx(inputs)); }
+```
+
+---
+
+## Onboarding
+
+First-time users see a 4-step onboarding wizard on login:
+
+1. **Welcome** — brand logo and value proposition
+2. **Features** — Workflow Builder / AI Matching / Real-time Timeline
+3. **Quick Start** — role-conditional links (Admin/Recruiter: create job + workflow; Viewer: browse)
+4. **Done** — celebration + Dashboard CTA
+
+Completion is stored in `localStorage` under key `ats_onboarding_complete`. Refreshing after completion skips the modal entirely.
+
+---
+
 ## RBAC
 
 | Role | Capabilities |
@@ -336,14 +427,22 @@ Each step emits an SSE event on `run:log:<applicationId>` so the frontend timeli
 
 ---
 
-## Docker Details
+## Docker Details & Seeding
 
-```
-docker-compose up --build
+### Seeding the Database
+The first time you start the Docker containers, you must seed the database with test data:
+
+```bash
+docker-compose exec backend node scripts/seed.js
 ```
 
-- **mongo** (mongo:7) — data persisted in `mongo_data` volume
-- **backend** — built from `backend/Dockerfile`; resume uploads in `uploads_data` volume; health-checked via `GET /healthz`
-- **frontend** — multi-stage build (Node 20 → nginx:alpine); `VITE_API_URL=/api` baked at build time; nginx proxies `/api/` → backend:5001, with SSE buffering disabled on `/api/applications/`
+This clears the database and populates 50 candidates, 10 jobs, 3 sample workflows, and 2 users:
+- **Admin**: `admin@ats.com` / `admin123`
+- **Recruiter**: `recruiter@ats.com` / `recruiter123`
+
+### Multi-Container Setup
+- **mongo** (mongo:7) — data persisted in `mongo_data` volume; health-checked via `mongosh` ping.
+- **backend** — built from `backend/Dockerfile`; resume uploads in `uploads_data` volume; health-checked via `GET /healthz` (depends on mongo healthy).
+- **frontend** — multi-stage build (Node 20 → nginx:alpine); `VITE_API_URL=/api` baked at build time; nginx proxies `/api/` → backend:5001, with SSE buffering disabled on `/api/applications/` (depends on backend healthy).
 
 To change `JWT_SECRET` for Docker: set it in a `.env` file at the project root (docker-compose reads it automatically).
