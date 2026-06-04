@@ -1,9 +1,23 @@
-// src/pages/Candidates.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Edit2, Trash2, Mail, Phone, MapPin } from 'lucide-react';
-import { candidatesAPI } from '../api';
+import { Search, Plus, Edit2, Trash2, Mail, Phone, MapPin, Users, AlertTriangle, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { candidatesAPI, applicationsAPI } from '../api';
 import ResumeUploader from '../components/upload/ResumeUploader';
 import useDebounce from '../hooks/useDebounce';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge, { stageToBadgeVariant } from '../components/ui/Badge';
+import Modal from '../components/ui/Modal';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import EmptyState from '../components/ui/EmptyState';
+import PageHeader from '../components/ui/PageHeader';
+import { CandidateCardSkeleton } from '../components/ui/Skeleton';
+import Spinner from '../components/ui/Spinner';
+import ApplicationTimeline from '../components/timeline/ApplicationTimeline';
+import ErrorBoundary from '../components/common/ErrorBoundary';
+
+const STATUS_VARIANT = { Active: 'success', Inactive: 'default', Hired: 'brand', Rejected: 'danger' };
 
 const Candidates = () => {
   const [candidates, setCandidates] = useState([]);
@@ -11,10 +25,9 @@ const Candidates = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState(null);
-  const [filters, setFilters] = useState({
-    location: '',
-    seniority: ''
-  });
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [filters, setFilters] = useState({ location: '', seniority: '' });
+  const [timelineCandidate, setTimelineCandidate] = useState(null);
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -23,368 +36,352 @@ const Candidates = () => {
     try {
       const params = {
         ...(debouncedSearch && { search: debouncedSearch }),
-        ...filters
+        ...filters,
       };
       const response = await candidatesAPI.getAll(params);
       setCandidates(response.data?.candidates || []);
-    } catch (error) {
-      console.error('Failed to fetch candidates:', error);
+    } catch (err) {
+      console.error('Failed to fetch candidates:', err);
     } finally {
       setLoading(false);
     }
   }, [debouncedSearch, filters]);
 
-  useEffect(() => {
-    fetchCandidates();
-  }, [fetchCandidates]);
+  useEffect(() => { fetchCandidates(); }, [fetchCandidates]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this candidate?')) return;
-
     try {
       await candidatesAPI.delete(id);
-      setCandidates(candidates.filter(c => c._id !== id));
-    } catch (error) {
-      alert(`Failed to delete candidate: ${error.message}`);
+      setCandidates(prev => prev.filter(c => c._id !== id));
+      setConfirmDeleteId(null);
+      toast.success('Candidate deleted');
+    } catch (err) {
+      toast.error(`Failed to delete: ${err.message}`);
     }
   };
 
-  const openModal = (candidate = null) => {
-    setEditingCandidate(candidate);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setEditingCandidate(null);
-    setShowModal(false);
-  };
-
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Candidates</h1>
-        <button
-          onClick={() => openModal()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Candidate
-        </button>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-6">
+      <PageHeader
+        title="Candidates"
+        subtitle="Manage your talent pool and candidate profiles"
+        actions={
+          <Button
+            variant="primary"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={() => { setEditingCandidate(null); setShowModal(true); }}
+          >
+            Add Candidate
+          </Button>
+        }
+      />
 
       {/* Filters */}
-      <div className="mb-6 bg-white rounded-lg shadow p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search candidates..."
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <select
+      <Card padding="sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search candidates…"
+            leftIcon={<Search className="w-4 h-4" />}
+          />
+          <Select
             value={filters.location}
-            onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onChange={e => setFilters(f => ({ ...f, location: e.target.value }))}
           >
             <option value="">All Locations</option>
-            <option value="Remote">Remote</option>
-            <option value="New York">New York</option>
-            <option value="San Francisco">San Francisco</option>
-            <option value="London">London</option>
-            <option value="Toronto">Toronto</option>
-          </select>
-          <select
+            <option>Remote</option>
+            <option>New York</option>
+            <option>San Francisco</option>
+            <option>London</option>
+            <option>Toronto</option>
+          </Select>
+          <Select
             value={filters.seniority}
-            onChange={(e) => setFilters({ ...filters, seniority: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onChange={e => setFilters(f => ({ ...f, seniority: e.target.value }))}
           >
             <option value="">All Seniority Levels</option>
-            <option value="Entry">Entry</option>
-            <option value="Mid">Mid</option>
-            <option value="Senior">Senior</option>
-            <option value="Lead">Lead</option>
-            <option value="Principal">Principal</option>
-          </select>
+            <option>Entry</option>
+            <option>Mid</option>
+            <option>Senior</option>
+            <option>Lead</option>
+            <option>Principal</option>
+          </Select>
         </div>
-      </div>
+      </Card>
 
-      {/* Candidates Grid */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <CandidateCardSkeleton />
       ) : candidates.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-500">No candidates found</p>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No candidates found"
+          description={debouncedSearch ? `No candidates matching "${debouncedSearch}"` : 'Add your first candidate to start building your talent pool.'}
+          action={!debouncedSearch ? { label: 'Add Candidate', onClick: () => { setEditingCandidate(null); setShowModal(true); } } : undefined}
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {candidates.map((candidate) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {candidates.map(candidate => (
             <CandidateCard
               key={candidate._id}
               candidate={candidate}
-              onEdit={() => openModal(candidate)}
-              onDelete={() => handleDelete(candidate._id)}
+              confirmDelete={confirmDeleteId === candidate._id}
+              onEdit={() => { setEditingCandidate(candidate); setShowModal(true); }}
+              onDeleteIntent={() => setConfirmDeleteId(candidate._id)}
+              onDeleteCancel={() => setConfirmDeleteId(null)}
+              onDeleteConfirm={() => handleDelete(candidate._id)}
+              onTimeline={() => setTimelineCandidate(candidate)}
             />
           ))}
         </div>
       )}
 
-      {/* Modal */}
-      {showModal && (
-        <CandidateModal
-          candidate={editingCandidate}
-          onClose={closeModal}
-          onSuccess={() => {
-            closeModal();
-            fetchCandidates();
-          }}
-        />
-      )}
+      <CandidateModal
+        open={showModal}
+        candidate={editingCandidate}
+        onClose={() => { setShowModal(false); setEditingCandidate(null); }}
+        onSuccess={() => { setShowModal(false); fetchCandidates(); }}
+      />
+
+      <CandidateTimelineModal
+        candidate={timelineCandidate}
+        onClose={() => setTimelineCandidate(null)}
+      />
     </div>
   );
 };
 
-// Candidate Card Component
-const CandidateCard = ({ candidate, onEdit, onDelete }) => {
-  return (
-    <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800">{candidate.name}</h3>
-          <p className="text-sm text-gray-500">{candidate.status || 'Active'}</p>
+const CandidateCard = ({ candidate, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, onDeleteConfirm, onTimeline }) => (
+  <Card className="relative">
+    <div className="flex items-start justify-between mb-3">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-semibold text-sm flex-shrink-0">
+          {candidate.name?.charAt(0).toUpperCase()}
         </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-zinc-900 truncate">{candidate.name}</h3>
+          <Badge variant={STATUS_VARIANT[candidate.status] || 'default'} size="sm">
+            {candidate.status || 'Active'}
+          </Badge>
+        </div>
+      </div>
+      <div className="flex items-center gap-0.5 flex-shrink-0">
+        <button onClick={onTimeline} aria-label="View timeline" className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors">
+          <Clock className="w-3.5 h-3.5 text-zinc-500" />
+        </button>
+        <button onClick={onEdit} aria-label="Edit candidate" className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors">
+          <Edit2 className="w-3.5 h-3.5 text-zinc-500" />
+        </button>
+        <button onClick={onDeleteIntent} aria-label="Delete candidate" className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
+          <Trash2 className="w-3.5 h-3.5 text-red-500" />
+        </button>
+      </div>
+    </div>
+
+    <div className="space-y-1.5 text-xs text-zinc-500 mb-3">
+      {candidate.email && (
+        <div className="flex items-center gap-2 truncate">
+          <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate">{candidate.email}</span>
+        </div>
+      )}
+      {candidate.phone && (
+        <div className="flex items-center gap-2">
+          <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+          {candidate.phone}
+        </div>
+      )}
+      {candidate.location && (
+        <div className="flex items-center gap-2">
+          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+          {candidate.location}
+        </div>
+      )}
+    </div>
+
+    {candidate.skills?.length > 0 && (
+      <div className="flex flex-wrap gap-1.5">
+        {candidate.skills.slice(0, 4).map((skill, i) => (
+          <Badge key={i} variant="info" size="sm">{skill}</Badge>
+        ))}
+        {candidate.skills.length > 4 && (
+          <span className="text-xs text-zinc-400">+{candidate.skills.length - 4}</span>
+        )}
+      </div>
+    )}
+
+    {confirmDelete && (
+      <div className="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center gap-3 p-4">
+        <div className="flex items-center gap-2 text-zinc-700">
+          <AlertTriangle className="w-5 h-5 text-amber-500" />
+          <span className="text-sm font-medium">Delete this candidate?</span>
+        </div>
+        <p className="text-xs text-zinc-500 text-center">This cannot be undone.</p>
         <div className="flex gap-2">
-          <button
-            onClick={onEdit}
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
-          >
-            <Edit2 className="w-4 h-4 text-gray-600" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="p-2 hover:bg-red-50 rounded transition-colors"
-          >
-            <Trash2 className="w-4 h-4 text-red-600" />
-          </button>
+          <Button variant="outline" size="sm" onClick={onDeleteCancel}>Cancel</Button>
+          <Button variant="danger" size="sm" onClick={onDeleteConfirm}>Delete</Button>
         </div>
       </div>
+    )}
+  </Card>
+);
 
-      <div className="space-y-2 text-sm text-gray-600 mb-4">
-        {candidate.email && (
-          <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4" />
-            <span className="truncate">{candidate.email}</span>
-          </div>
-        )}
-        {candidate.phone && (
-          <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4" />
-            <span>{candidate.phone}</span>
-          </div>
-        )}
-        {candidate.location && (
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            <span>{candidate.location}</span>
-          </div>
-        )}
-      </div>
-
-      {candidate.skills && candidate.skills.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {candidate.skills.slice(0, 4).map((skill, idx) => (
-            <span
-              key={idx}
-              className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
-            >
-              {skill}
-            </span>
-          ))}
-          {candidate.skills.length > 4 && (
-            <span className="px-2 py-1 text-gray-500 text-xs">
-              +{candidate.skills.length - 4} more
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Candidate Modal Component
-const CandidateModal = ({ candidate, onClose, onSuccess }) => {
+const CandidateModal = ({ open, candidate, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    name: candidate?.name || '',
-    email: candidate?.email || '',
-    phone: candidate?.phone || '',
-    location: candidate?.location || '',
-    seniority: candidate?.seniority || '',
-    skills: candidate?.skills?.join(', ') || '',
-    experience: candidate?.experience || [],
-    resume: null
+    name: '', email: '', phone: '', location: '', seniority: '', skills: '', resume: null,
   });
-  const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
-  const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: null });
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        name:      candidate?.name     || '',
+        email:     candidate?.email    || '',
+        phone:     candidate?.phone    || '',
+        location:  candidate?.location || '',
+        seniority: candidate?.seniority || '',
+        skills:    candidate?.skills?.join(', ') || '',
+        resume:    null,
+      });
+      setErrors({});
     }
-  };
+  }, [open, candidate]);
 
   const validate = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e = {};
+    if (!formData.name.trim()) e.name = 'Name is required';
+    if (!formData.email.trim()) e.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = 'Invalid email format';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (ev) => {
+    ev?.preventDefault();
     if (!validate()) return;
-
     setSaving(true);
     try {
-      const dataToSubmit = {
-        ...formData,
-        skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean)
-      };
-
+      const payload = { ...formData, skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean) };
       if (candidate) {
-        await candidatesAPI.update(candidate._id, dataToSubmit);
+        await candidatesAPI.update(candidate._id, payload);
+        toast.success('Candidate updated');
       } else {
-        await candidatesAPI.create(dataToSubmit);
+        await candidatesAPI.create(payload);
+        toast.success('Candidate added');
       }
-
       onSuccess();
-    } catch (error) {
-      alert(`Failed to save candidate: ${error.message}`);
+    } catch (err) {
+      toast.error(`Failed to save: ${err.message}`);
     } finally {
       setSaving(false);
     }
   };
 
+  const set = (field) => (e) => {
+    const val = e.target.value;
+    setFormData(prev => ({ ...prev, [field]: val }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {candidate ? 'Edit Candidate' : 'Add Candidate'}
-          </h2>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={candidate ? 'Edit Candidate' : 'Add Candidate'}
+      size="lg"
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" loading={saving} onClick={handleSubmit}>
+            {candidate ? 'Update' : 'Add Candidate'}
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Full Name *" value={formData.name} onChange={set('name')} error={errors.name} placeholder="Jane Smith" />
+          <Input label="Email *" type="email" value={formData.email} onChange={set('email')} error={errors.email} placeholder="jane@example.com" />
         </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Phone" type="tel" value={formData.phone} onChange={set('phone')} placeholder="+1 555 000 0000" />
+          <Input label="Location" value={formData.location} onChange={set('location')} placeholder="Remote, New York…" />
+        </div>
+        <Select label="Seniority Level" value={formData.seniority} onChange={set('seniority')}>
+          <option value="">Select level…</option>
+          <option>Entry</option>
+          <option>Mid</option>
+          <option>Senior</option>
+          <option>Lead</option>
+          <option>Principal</option>
+        </Select>
+        <Input
+          label="Skills (comma-separated)"
+          value={formData.skills}
+          onChange={set('skills')}
+          placeholder="JavaScript, React, Node.js"
+          hint="Used for AI matching score"
+        />
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1.5">Resume (PDF only)</label>
+          <ResumeUploader
+            onFileSelect={file => setFormData(prev => ({ ...prev, resume: file }))}
+            existingFile={candidate?.resume}
+          />
+        </div>
+      </form>
+    </Modal>
+  );
+};
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.name ? 'border-red-300' : 'border-gray-300'
-                }`}
-              />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+const CandidateTimelineModal = ({ candidate, onClose }) => {
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!candidate) return;
+    setLoading(true);
+    applicationsAPI.getAll({ candidateId: candidate._id })
+      .then(res => setApplications(res.data?.applications || []))
+      .catch(() => setApplications([]))
+      .finally(() => setLoading(false));
+  }, [candidate]);
+
+  return (
+    <Modal
+      open={!!candidate}
+      onClose={onClose}
+      title={candidate ? `Timeline — ${candidate.name}` : 'Timeline'}
+      size="xl"
+    >
+      {loading ? (
+        <div className="flex justify-center py-8"><Spinner size="md" /></div>
+      ) : applications.length === 0 ? (
+        <EmptyState
+          icon={Clock}
+          title="No applications"
+          description="This candidate has no applications yet."
+        />
+      ) : (
+        <div className="space-y-6">
+          {applications.map(app => (
+            <div key={app._id}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-medium text-zinc-800">
+                  {app.jobId?.title || app.job?.title || 'Unknown Job'}
+                </span>
+                <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>
+              </div>
+              <ErrorBoundary>
+                <ApplicationTimeline applicationId={app._id} />
+              </ErrorBoundary>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email *
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                }`}
-              />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Location
-              </label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => handleChange('location', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Skills (comma-separated)
-            </label>
-            <input
-              type="text"
-              value={formData.skills}
-              onChange={(e) => handleChange('skills', e.target.value)}
-              placeholder="JavaScript, React, Node.js"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Resume (PDF only)
-            </label>
-            <ResumeUploader
-              onFileSelect={(file) => handleChange('resume', file)}
-              existingFile={candidate?.resume}
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Saving...' : candidate ? 'Update' : 'Create'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          ))}
+        </div>
+      )}
+    </Modal>
   );
 };
 

@@ -1,7 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Edit2, Trash2, MapPin, Briefcase } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, MapPin, Briefcase, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { jobsAPI } from '../api';
 import useDebounce from '../hooks/useDebounce';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Modal from '../components/ui/Modal';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import EmptyState from '../components/ui/EmptyState';
+import PageHeader from '../components/ui/PageHeader';
+import { JobCardSkeleton } from '../components/ui/Skeleton';
+
+const STATUS_VARIANT = { Open: 'success', Closed: 'danger', 'On Hold': 'warning' };
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -9,6 +21,7 @@ const Jobs = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -18,130 +31,147 @@ const Jobs = () => {
       const params = debouncedSearch ? { search: debouncedSearch } : {};
       const response = await jobsAPI.getAll(params);
       setJobs(response.data?.jobs || []);
-    } catch (error) {
-      console.error('Failed to fetch jobs:', error);
+    } catch (err) {
+      console.error('Failed to fetch jobs:', err);
     } finally {
       setLoading(false);
     }
   }, [debouncedSearch]);
 
-  useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+  useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this job?')) return;
-
     try {
       await jobsAPI.delete(id);
-      setJobs(jobs.filter(j => j._id !== id));
-    } catch (error) {
-      alert(`Failed to delete job: ${error.message}`);
+      setJobs(prev => prev.filter(j => j._id !== id));
+      setConfirmDeleteId(null);
+      toast.success('Job deleted');
+    } catch (err) {
+      toast.error(`Failed to delete: ${err.message}`);
     }
   };
 
   return (
-    // ... rest of the component stays the same
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Jobs</h1>
-        <button
-          onClick={() => { setEditingJob(null); setShowModal(true); }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Post Job
-        </button>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-6">
+      <PageHeader
+        title="Jobs"
+        subtitle="Manage your open positions and requirements"
+        actions={
+          <Button
+            variant="primary"
+            leftIcon={<Plus className="w-4 h-4" />}
+            onClick={() => { setEditingJob(null); setShowModal(true); }}
+          >
+            Post Job
+          </Button>
+        }
+      />
 
-      <div className="mb-6 bg-white rounded-lg shadow p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search jobs..."
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
+      <Card padding="sm">
+        <Input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search jobs by title, skills, location…"
+          leftIcon={<Search className="w-4 h-4" />}
+        />
+      </Card>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <JobCardSkeleton />
       ) : jobs.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-500">No jobs found</p>
-        </div>
+        <EmptyState
+          icon={Briefcase}
+          title="No jobs found"
+          description={debouncedSearch ? `No jobs matching "${debouncedSearch}"` : 'Post your first job opening to start attracting candidates.'}
+          action={!debouncedSearch ? { label: 'Post a Job', onClick: () => { setEditingJob(null); setShowModal(true); } } : undefined}
+        />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {jobs.map((job) => (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {jobs.map(job => (
             <JobCard
               key={job._id}
               job={job}
+              confirmDelete={confirmDeleteId === job._id}
               onEdit={() => { setEditingJob(job); setShowModal(true); }}
-              onDelete={() => handleDelete(job._id)}
+              onDeleteIntent={() => setConfirmDeleteId(job._id)}
+              onDeleteCancel={() => setConfirmDeleteId(null)}
+              onDeleteConfirm={() => handleDelete(job._id)}
             />
           ))}
         </div>
       )}
 
-      {showModal && (
-        <JobModal
-          job={editingJob}
-          onClose={() => { setShowModal(false); setEditingJob(null); }}
-          onSuccess={() => { setShowModal(false); fetchJobs(); }}
-        />
-      )}
+      <JobModal
+        open={showModal}
+        job={editingJob}
+        onClose={() => { setShowModal(false); setEditingJob(null); }}
+        onSuccess={() => { setShowModal(false); fetchJobs(); }}
+      />
     </div>
   );
 };
 
-const JobCard = ({ job, onEdit, onDelete }) => (
-  <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6">
-    <div className="flex items-start justify-between mb-4">
-      <div>
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">{job.title}</h3>
-        <div className="flex items-center gap-4 text-sm text-gray-600">
+const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, onDeleteConfirm }) => (
+  <Card className="relative">
+    <div className="flex items-start justify-between mb-3">
+      <div className="flex-1 min-w-0 pr-3">
+        <h3 className="text-base font-semibold text-zinc-900 truncate">{job.title}</h3>
+        <div className="flex items-center flex-wrap gap-3 text-xs text-zinc-500 mt-1">
           {job.location && (
-            <div className="flex items-center gap-1">
-              <MapPin className="w-4 h-4" />
-              <span>{job.location}</span>
-            </div>
+            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.location}</span>
           )}
           {job.seniority && (
-            <div className="flex items-center gap-1">
-              <Briefcase className="w-4 h-4" />
-              <span>{job.seniority}</span>
-            </div>
+            <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{job.seniority}</span>
           )}
         </div>
       </div>
-      <div className="flex gap-2">
-        <button onClick={onEdit} className="p-2 hover:bg-gray-100 rounded">
-          <Edit2 className="w-4 h-4 text-gray-600" />
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Badge variant={STATUS_VARIANT[job.status] || 'default'} size="sm">{job.status || 'Open'}</Badge>
+        <button
+          onClick={onEdit}
+          aria-label="Edit job"
+          className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors ml-1"
+        >
+          <Edit2 className="w-3.5 h-3.5 text-zinc-500" />
         </button>
-        <button onClick={onDelete} className="p-2 hover:bg-red-50 rounded">
-          <Trash2 className="w-4 h-4 text-red-600" />
+        <button
+          onClick={onDeleteIntent}
+          aria-label="Delete job"
+          className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-red-500" />
         </button>
       </div>
     </div>
 
-    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{job.description}</p>
+    {job.description && (
+      <p className="text-sm text-zinc-500 line-clamp-2 mb-3">{job.description}</p>
+    )}
 
     {job.requiredSkills?.length > 0 && (
-      <div className="mb-3">
-        <p className="text-xs font-medium text-gray-600 mb-2">Required Skills</p>
-        <div className="flex flex-wrap gap-2">
-          {job.requiredSkills.slice(0, 5).map((skill, idx) => (
-            <span key={idx} className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
-              {skill}
-            </span>
+      <div className="mb-2">
+        <p className="text-2xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Required</p>
+        <div className="flex flex-wrap gap-1.5">
+          {job.requiredSkills.slice(0, 6).map((skill, i) => (
+            <Badge key={i} variant="danger" size="sm">{skill}</Badge>
           ))}
-          {job.requiredSkills.length > 5 && (
-            <span className="px-2 py-1 text-gray-500 text-xs">+{job.requiredSkills.length - 5}</span>
+          {job.requiredSkills.length > 6 && (
+            <span className="text-xs text-zinc-400">+{job.requiredSkills.length - 6}</span>
+          )}
+        </div>
+      </div>
+    )}
+
+    {job.operationalSkills?.length > 0 && (
+      <div className="mb-2">
+        <p className="text-2xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Operational</p>
+        <div className="flex flex-wrap gap-1.5">
+          {job.operationalSkills.slice(0, 3).map((skill, i) => (
+            <Badge key={i} variant="info" size="sm">{skill}</Badge>
+          ))}
+          {job.operationalSkills.length > 3 && (
+            <span className="text-xs text-zinc-400">+{job.operationalSkills.length - 3}</span>
           )}
         </div>
       </div>
@@ -149,138 +179,140 @@ const JobCard = ({ job, onEdit, onDelete }) => (
 
     {job.hygieneSkills?.length > 0 && (
       <div>
-        <p className="text-xs font-medium text-gray-600 mb-2">Hygiene Skills (+5% each)</p>
-        <div className="flex flex-wrap gap-2">
-          {job.hygieneSkills.slice(0, 5).map((skill, idx) => (
-            <span key={idx} className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-              {skill}
-            </span>
+        <p className="text-2xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Hygiene (+5% each)</p>
+        <div className="flex flex-wrap gap-1.5">
+          {job.hygieneSkills.slice(0, 4).map((skill, i) => (
+            <Badge key={i} variant="success" size="sm">{skill}</Badge>
           ))}
         </div>
       </div>
     )}
-  </div>
+
+    {confirmDelete && (
+      <div className="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center gap-3 p-4">
+        <div className="flex items-center gap-2 text-zinc-700">
+          <AlertTriangle className="w-5 h-5 text-amber-500" />
+          <span className="text-sm font-medium">Delete this job?</span>
+        </div>
+        <p className="text-xs text-zinc-500 text-center">This cannot be undone.</p>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onDeleteCancel}>Cancel</Button>
+          <Button variant="danger" size="sm" onClick={onDeleteConfirm}>Delete</Button>
+        </div>
+      </div>
+    )}
+  </Card>
 );
 
-const JobModal = ({ job, onClose, onSuccess }) => {
+const JobModal = ({ open, job, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    title: job?.title || '',
-    description: job?.description || '',
-    location: job?.location || '',
-    seniority: job?.seniority || '',
-    requiredSkills: job?.requiredSkills?.join(', ') || '',
-    hygieneSkills: job?.hygieneSkills?.join(', ') || ''
+    title: '', description: '', location: '', seniority: '', requiredSkills: '', operationalSkills: '', hygieneSkills: '',
   });
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title:             job?.title || '',
+        description:       job?.description || '',
+        location:          job?.location || '',
+        seniority:         job?.seniority || '',
+        requiredSkills:    job?.requiredSkills?.join(', ')    || '',
+        operationalSkills: job?.operationalSkills?.join(', ') || '',
+        hygieneSkills:     job?.hygieneSkills?.join(', ')     || '',
+      });
+    }
+  }, [open, job]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.title.trim()) { toast.error('Title is required'); return; }
     setSaving(true);
-
     try {
-      const dataToSubmit = {
+      const payload = {
         ...formData,
-        requiredSkills: formData.requiredSkills.split(',').map(s => s.trim()).filter(Boolean),
-        hygieneSkills: formData.hygieneSkills.split(',').map(s => s.trim()).filter(Boolean)
+        requiredSkills:    formData.requiredSkills.split(',').map(s => s.trim()).filter(Boolean),
+        operationalSkills: formData.operationalSkills.split(',').map(s => s.trim()).filter(Boolean),
+        hygieneSkills:     formData.hygieneSkills.split(',').map(s => s.trim()).filter(Boolean),
       };
-
       if (job) {
-        await jobsAPI.update(job._id, dataToSubmit);
+        await jobsAPI.update(job._id, payload);
+        toast.success('Job updated');
       } else {
-        await jobsAPI.create(dataToSubmit);
+        await jobsAPI.create(payload);
+        toast.success('Job posted');
       }
       onSuccess();
-    } catch (error) {
-      alert(`Failed to save job: ${error.message}`);
+    } catch (err) {
+      toast.error(`Failed to save: ${err.message}`);
     } finally {
       setSaving(false);
     }
   };
 
+  const set = (field) => (e) => setFormData(prev => ({ ...prev, [field]: e.target.value }));
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-semibold">{job ? 'Edit Job' : 'Post New Job'}</h2>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={job ? 'Edit Job' : 'Post New Job'}
+      size="lg"
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" loading={saving} onClick={handleSubmit}>
+            {job ? 'Update Job' : 'Post Job'}
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input label="Job Title *" value={formData.title} onChange={set('title')} placeholder="Senior Frontend Engineer" required />
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1.5">Description</label>
+          <textarea
+            rows={4}
+            value={formData.description}
+            onChange={set('description')}
+            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors resize-none"
+            placeholder="Describe the role, responsibilities, and requirements…"
+          />
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Title *</label>
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea
-              rows="4"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Location</label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Seniority</label>
-              <select
-                value={formData.seniority}
-                onChange={(e) => setFormData({ ...formData, seniority: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select...</option>
-                <option value="Entry">Entry</option>
-                <option value="Mid">Mid</option>
-                <option value="Senior">Senior</option>
-                <option value="Lead">Lead</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Required Skills (comma-separated)</label>
-            <input
-              type="text"
-              value={formData.requiredSkills}
-              onChange={(e) => setFormData({ ...formData, requiredSkills: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Hygiene Skills (comma-separated, +5% each)</label>
-            <input
-              type="text"
-              value={formData.hygieneSkills}
-              onChange={(e) => setFormData({ ...formData, hygieneSkills: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {saving ? 'Saving...' : job ? 'Update' : 'Create'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Location" value={formData.location} onChange={set('location')} placeholder="Remote, New York…" />
+          <Select label="Seniority" value={formData.seniority} onChange={set('seniority')}>
+            <option value="">Select level…</option>
+            <option>Entry</option>
+            <option>Mid</option>
+            <option>Senior</option>
+            <option>Lead</option>
+            <option>Executive</option>
+          </Select>
+        </div>
+        <Input
+          label="Required Skills (comma-separated)"
+          value={formData.requiredSkills}
+          onChange={set('requiredSkills')}
+          placeholder="React, TypeScript, Node.js"
+          hint="Hard requirements — used in matching score"
+        />
+        <Input
+          label="Operational Skills (comma-separated)"
+          value={formData.operationalSkills}
+          onChange={set('operationalSkills')}
+          placeholder="TypeScript, Docker, Redis"
+          hint="Technical skills that refine the candidate match score"
+        />
+        <Input
+          label="Hygiene Skills (comma-separated)"
+          value={formData.hygieneSkills}
+          onChange={set('hygieneSkills')}
+          placeholder="Git, Agile, Docker"
+          hint="Nice-to-haves — each adds +5% to match score"
+        />
+      </form>
+    </Modal>
   );
 };
 

@@ -1,218 +1,207 @@
-// src/pages/Login.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Briefcase, AlertCircle } from 'lucide-react';
+import { AlertCircle, Zap, Target, Activity, ArrowRight } from 'lucide-react';
+import Input from '../components/ui/Input';
+import Button from '../components/ui/Button';
+
+const features = [
+  { icon: Zap,      text: 'Automate candidate screening workflows' },
+  { icon: Target,   text: 'AI-powered skill-based matching' },
+  { icon: Activity, text: 'Real-time pipeline visibility' },
+];
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, register } = useAuth();
-  
+
   const [isRegistering, setIsRegistering] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    const newErrors = {};
-
-    if (isRegistering && !formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (isRegistering && formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e = {};
+    if (isRegistering && !formData.name.trim()) e.name = 'Name is required';
+    if (!formData.email.trim()) e.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = 'Invalid email format';
+    if (!formData.password) e.password = 'Password is required';
+    else if (formData.password.length < 6) e.password = 'Password must be at least 6 characters';
+    if (isRegistering && formData.password !== formData.confirmPassword) e.confirmPassword = 'Passwords do not match';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
     if (!validate()) return;
-
     setLoading(true);
     setErrors({});
-
     try {
-      let result;
-      
-      if (isRegistering) {
-        result = await register(formData.name, formData.email, formData.password);
-      } else {
-        result = await login(formData.email, formData.password);
-      }
-
+      const result = isRegistering
+        ? await register(formData.name, formData.email, formData.password)
+        : await login(formData.email, formData.password);
       if (result.success) {
         navigate('/dashboard');
       } else {
         setErrors({ form: result.error || 'Authentication failed' });
       }
-    } catch (error) {
-      setErrors({ form: error.message || 'An error occurred' });
+    } catch (err) {
+      setErrors({ form: err.message || 'An error occurred' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: null });
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
+  };
+
+  const switchMode = () => {
+    setIsRegistering(v => !v);
+    setErrors({});
+    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white text-center">
-          <div className="flex justify-center mb-4">
-            <div className="bg-white bg-opacity-20 p-3 rounded-full">
-              <Briefcase className="w-10 h-10" />
+    <div className="min-h-screen flex">
+      {/* Left brand panel */}
+      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-brand-600 to-brand-900 flex-col justify-between p-12 text-white">
+        <div>
+          <div className="flex items-center gap-3 mb-12">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+              <span className="text-xl font-bold">T</span>
             </div>
+            <span className="text-xl font-bold">TalentFlow</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">ATS Automation</h1>
-          <p className="text-blue-100">
-            {isRegistering ? 'Create your account' : 'Welcome back'}
+
+          <h2 className="text-4xl font-bold leading-tight mb-4">
+            Recruitment<br />reimagined.
+          </h2>
+          <p className="text-brand-200 text-lg leading-relaxed mb-10">
+            The event-driven ATS built for modern recruiting teams who demand speed, automation, and insight.
           </p>
+
+          <div className="space-y-4">
+            {features.map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-4 h-4" />
+                </div>
+                <span className="text-brand-100 text-sm">{text}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-5">
+        <p className="text-brand-300 text-sm">
+          "Built for teams who move fast and hire smart."
+        </p>
+      </div>
+
+      {/* Right form panel */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-white">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-2 mb-8 lg:hidden">
+            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">T</span>
+            </div>
+            <span className="font-bold text-zinc-900">TalentFlow</span>
+          </div>
+
+          <h1 className="text-2xl font-bold text-zinc-900 mb-1">
+            {isRegistering ? 'Create your account' : 'Welcome back'}
+          </h1>
+          <p className="text-zinc-500 text-sm mb-8">
+            {isRegistering
+              ? 'Start managing your recruitment pipeline today'
+              : 'Sign in to access your recruitment dashboard'}
+          </p>
+
           {errors.form && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+            <div className="mb-5 flex items-start gap-3 bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{errors.form}</p>
             </div>
           )}
 
-          {isRegistering && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-              <input
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isRegistering && (
+              <Input
+                label="Full Name"
                 type="text"
                 value={formData.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                  errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
-                placeholder="John Doe"
+                onChange={e => handleChange('name', e.target.value)}
+                placeholder="Jane Smith"
+                error={errors.name}
+                autoComplete="name"
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-              )}
-            </div>
-          )}
+            )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
+            <Input
+              label="Email Address"
               type="email"
               value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              }`}
-              placeholder="you@example.com"
+              onChange={e => handleChange('email', e.target.value)}
+              placeholder="you@company.com"
+              error={errors.email}
+              autoComplete="email"
             />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-            )}
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
+            <Input
+              label="Password"
               type="password"
               value={formData.password}
-              onChange={(e) => handleChange('password', e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              }`}
+              onChange={e => handleChange('password', e.target.value)}
               placeholder="••••••••"
+              error={errors.password}
+              autoComplete={isRegistering ? 'new-password' : 'current-password'}
             />
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-            )}
-          </div>
 
-          {isRegistering && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
-              <input
+            {isRegistering && (
+              <Input
+                label="Confirm Password"
                 type="password"
                 value={formData.confirmPassword}
-                onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                  errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
+                onChange={e => handleChange('confirmPassword', e.target.value)}
                 placeholder="••••••••"
+                error={errors.confirmPassword}
+                autoComplete="new-password"
               />
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
-              )}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Processing...
-              </span>
-            ) : (
-              isRegistering ? 'Create Account' : 'Sign In'
             )}
-          </button>
 
-          <div className="text-center">
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={loading}
+              className="w-full mt-2"
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+            >
+              {isRegistering ? 'Create Account' : 'Sign In'}
+            </Button>
+          </form>
+
+          <p className="text-center mt-6 text-sm text-zinc-500">
+            {isRegistering ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               type="button"
-              onClick={() => {
-                setIsRegistering(!isRegistering);
-                setErrors({});
-                setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-              }}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              onClick={switchMode}
+              className="text-brand-600 hover:text-brand-700 font-medium transition-colors"
             >
-              {isRegistering 
-                ? 'Already have an account? Sign in' 
-                : "Don't have an account? Register"}
+              {isRegistering ? 'Sign in' : 'Register'}
             </button>
-          </div>
-        </form>
+          </p>
+
+          {!isRegistering && (
+            <div className="mt-6 pt-6 border-t border-zinc-100 text-center">
+              <p className="text-xs text-zinc-400">Demo credentials</p>
+              <p className="text-xs text-zinc-500 mt-1">admin@ats.com / admin123</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

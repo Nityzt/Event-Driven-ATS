@@ -1,147 +1,128 @@
 import { useState } from 'react';
-import { User, Lock, Save, CheckCircle } from 'lucide-react';
+import { Lock, Save, User, Mail, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../api/client';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Badge from '../components/ui/Badge';
+import Input from '../components/ui/Input';
+import PageHeader from '../components/ui/PageHeader';
 
-const ROLE_COLORS = {
-  Admin:     'bg-purple-100 text-purple-700',
-  Recruiter: 'bg-blue-100 text-blue-700',
-  Viewer:    'bg-gray-100 text-gray-600'
-};
+const ROLE_VARIANT = { Admin: 'purple', Recruiter: 'info', Viewer: 'default' };
 
 const Profile = () => {
   const { user } = useAuth();
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [pwError, setPwError] = useState('');
-  const [pwSuccess, setPwSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    setPwError('');
-    setPwSuccess(false);
-
     if (pwForm.newPassword.length < 6) {
-      return setPwError('New password must be at least 6 characters.');
+      toast.error('New password must be at least 6 characters.');
+      return;
     }
     if (pwForm.newPassword !== pwForm.confirmPassword) {
-      return setPwError('Passwords do not match.');
+      toast.error('Passwords do not match.');
+      return;
     }
-
     setSaving(true);
     try {
       await apiClient.patch('/auth/change-password', {
         currentPassword: pwForm.currentPassword,
-        newPassword:     pwForm.newPassword
+        newPassword:     pwForm.newPassword,
       });
-      setPwSuccess(true);
+      toast.success('Password changed successfully!');
       setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (err) {
-      setPwError(err.response?.data?.error || 'Failed to change password.');
+    } catch {
+      toast.error('Failed to change password. Check your current password.');
     } finally {
       setSaving(false);
     }
   };
 
+  const initial = user?.name?.charAt(0)?.toUpperCase() || 'U';
+
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <User className="w-7 h-7 text-blue-600" />
-          Profile
-        </h1>
-        <p className="text-gray-600 mt-1">Your account information</p>
-      </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <PageHeader title="Profile" subtitle="Manage your account and security settings" />
 
       {/* Profile card */}
-      <div className="bg-white rounded-xl shadow p-6 mb-6">
+      <Card>
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold">
-            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+          <div className="w-16 h-16 rounded-full bg-brand-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+            {initial}
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">{user?.name}</h2>
-            <p className="text-gray-500">{user?.email}</p>
-            <span className={`mt-1 inline-block px-2 py-1 rounded text-xs font-medium ${ROLE_COLORS[user?.role] || 'bg-gray-100 text-gray-600'}`}>
+            <h2 className="text-lg font-semibold text-zinc-900">{user?.name}</h2>
+            <p className="text-sm text-zinc-500 mb-1">{user?.email}</p>
+            <Badge variant={ROLE_VARIANT[user?.role] || 'default'}>
+              <Shield className="w-3 h-3" />
               {user?.role}
-            </span>
+            </Badge>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 border-t pt-4 text-sm">
-          <div>
-            <p className="text-gray-500 font-medium">Name</p>
-            <p className="text-gray-800 mt-1">{user?.name}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-zinc-100">
+          <div className="flex items-center gap-2.5 p-3 rounded-lg bg-zinc-50">
+            <User className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+            <div>
+              <p className="text-2xs text-zinc-400 uppercase tracking-wide font-semibold">Name</p>
+              <p className="text-sm text-zinc-800 font-medium">{user?.name}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-gray-500 font-medium">Email</p>
-            <p className="text-gray-800 mt-1">{user?.email}</p>
-          </div>
-          <div>
-            <p className="text-gray-500 font-medium">Role</p>
-            <p className="text-gray-800 mt-1">{user?.role}</p>
+          <div className="flex items-center gap-2.5 p-3 rounded-lg bg-zinc-50">
+            <Mail className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+            <div>
+              <p className="text-2xs text-zinc-400 uppercase tracking-wide font-semibold">Email</p>
+              <p className="text-sm text-zinc-800 font-medium truncate">{user?.email}</p>
+            </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Change Password */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <Lock className="w-5 h-5 text-gray-500" />
+      <Card>
+        <h3 className="text-base font-semibold text-zinc-900 flex items-center gap-2 mb-5">
+          <Lock className="w-4 h-4 text-zinc-500" />
           Change Password
         </h3>
-
-        {pwSuccess && (
-          <div className="mb-4 flex items-center gap-2 text-green-700 bg-green-50 px-4 py-3 rounded-lg">
-            <CheckCircle className="w-5 h-5" />
-            Password changed successfully.
-          </div>
-        )}
-        {pwError && (
-          <div className="mb-4 text-red-700 bg-red-50 px-4 py-3 rounded-lg text-sm">{pwError}</div>
-        )}
-
         <form onSubmit={handlePasswordChange} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-            <input
-              type="password"
-              value={pwForm.currentPassword}
-              onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-            <input
-              type="password"
-              value={pwForm.newPassword}
-              onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-            <input
-              type="password"
-              value={pwForm.confirmPassword}
-              onChange={e => setPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
+          <Input
+            label="Current Password"
+            type="password"
+            value={pwForm.currentPassword}
+            onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
+            required
+            autoComplete="current-password"
+          />
+          <Input
+            label="New Password"
+            type="password"
+            value={pwForm.newPassword}
+            onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
+            hint="Minimum 6 characters"
+            required
+            autoComplete="new-password"
+          />
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={pwForm.confirmPassword}
+            onChange={e => setPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
+            required
+            autoComplete="new-password"
+          />
+          <Button
             type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            variant="primary"
+            loading={saving}
+            leftIcon={<Save className="w-4 h-4" />}
           >
-            <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Update Password'}
-          </button>
+            Update Password
+          </Button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 };

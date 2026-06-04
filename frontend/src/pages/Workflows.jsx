@@ -1,26 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Plus, Play, Pause, Trash2, Edit2, Activity, Square, RotateCcw, Clock } from 'lucide-react';
+import { Plus, Play, Pause, Trash2, Edit2, Activity, Square, Workflow, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import WorkflowBuilder from '../components/workflow/WorkflowBuilder.jsx';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import { workflowsAPI, runsAPI } from '../api';
 import { useAuth } from '../contexts/AuthContext';
-
-const STATE_COLORS = {
-  queued:    'bg-gray-100 text-gray-700',
-  running:   'bg-blue-100 text-blue-700',
-  paused:    'bg-yellow-100 text-yellow-700',
-  completed: 'bg-green-100 text-green-700',
-  failed:    'bg-red-100 text-red-700',
-  cancelled: 'bg-gray-100 text-gray-500'
-};
+import Card from '../components/ui/Card';
+import Badge, { stateToBadgeVariant } from '../components/ui/Badge';
+import Button from '../components/ui/Button';
+import EmptyState from '../components/ui/EmptyState';
+import PageHeader from '../components/ui/PageHeader';
 
 const Workflows = () => {
   const { hasRole } = useAuth();
-  const [tab, setTab] = useState('workflows'); // 'workflows' | 'runs'
+  const [tab, setTab] = useState('workflows');
   const [workflows, setWorkflows] = useState([]);
   const [runs, setRuns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingWorkflow, setEditingWorkflow] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
     if (tab === 'workflows') fetchWorkflows();
@@ -55,82 +54,75 @@ const Workflows = () => {
     try {
       await workflowsAPI.toggle(id);
       setWorkflows(prev => prev.map(w => w._id === id ? { ...w, enabled: !w.enabled } : w));
+      toast.success('Workflow updated');
     } catch (err) {
-      alert(`Failed to toggle: ${err.message}`);
+      toast.error(`Failed to toggle: ${err.message}`);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this workflow?')) return;
     try {
       await workflowsAPI.delete(id);
       setWorkflows(prev => prev.filter(w => w._id !== id));
+      setConfirmDeleteId(null);
+      toast.success('Workflow deleted');
     } catch (err) {
-      alert(`Failed to delete: ${err.message}`);
+      toast.error(`Failed to delete: ${err.message}`);
     }
   };
 
   const handleRunAction = async (runId, action) => {
     try {
       await runsAPI[action](runId);
+      toast.success(`Run ${action}d`);
       fetchRuns();
     } catch (err) {
-      alert(`Failed to ${action} run: ${err.message}`);
+      toast.error(`Failed to ${action} run: ${err.message}`);
     }
   };
 
-  const openBuilder = (workflow = null) => {
-    setEditingWorkflow(workflow);
-    setShowBuilder(true);
-  };
-
-  const closeBuilder = () => {
-    setEditingWorkflow(null);
-    setShowBuilder(false);
-  };
+  const openBuilder = (workflow = null) => { setEditingWorkflow(workflow); setShowBuilder(true); };
+  const closeBuilder = () => { setEditingWorkflow(null); setShowBuilder(false); };
 
   if (showBuilder) {
     return (
-      <WorkflowBuilder
-        existingWorkflow={editingWorkflow}
-        onSave={() => { closeBuilder(); fetchWorkflows(); }}
-        onCancel={closeBuilder}
-      />
+      <ErrorBoundary>
+        <WorkflowBuilder
+          existingWorkflow={editingWorkflow}
+          onSave={() => { closeBuilder(); fetchWorkflows(); }}
+          onCancel={closeBuilder}
+        />
+      </ErrorBoundary>
     );
   }
 
-  return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Workflows</h1>
-          <p className="text-gray-600 mt-1">Automate your recruitment process</p>
-        </div>
-        {tab === 'workflows' && (
-          <button
-            onClick={() => openBuilder()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Create Workflow
-          </button>
-        )}
-      </div>
+  const TABS = [
+    { key: 'workflows', label: 'Workflows' },
+    { key: 'runs',      label: 'Runs' },
+  ];
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-gray-200">
-        {[
-          { key: 'workflows', label: 'Workflows' },
-          { key: 'runs', label: 'Runs' }
-        ].map(t => (
+  return (
+    <div className="max-w-7xl mx-auto space-y-6">
+      <PageHeader
+        title="Workflows"
+        subtitle="Automate your recruitment process with event-driven triggers and steps"
+        actions={tab === 'workflows' && (
+          <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />} onClick={() => openBuilder()}>
+            Create Workflow
+          </Button>
+        )}
+      />
+
+      {/* Tab bar */}
+      <div className="inline-flex bg-zinc-100 rounded-xl p-1 gap-1">
+        {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 ${
               tab === t.key
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-zinc-900 shadow-sm'
+                : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
             {t.label}
@@ -139,26 +131,38 @@ const Workflows = () => {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[1,2].map(i => (
+            <Card key={i}>
+              <div className="skeleton-shimmer h-5 w-40 mb-3 rounded" />
+              <div className="skeleton-shimmer h-4 w-24 mb-4 rounded" />
+              <div className="flex gap-2">
+                <div className="skeleton-shimmer h-6 w-20 rounded-full" />
+                <div className="skeleton-shimmer h-6 w-16 rounded-full" />
+              </div>
+            </Card>
+          ))}
         </div>
       ) : tab === 'workflows' ? (
         workflows.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-500 mb-4">No workflows yet</p>
-            <button onClick={() => openBuilder()} className="text-blue-600 hover:text-blue-800 font-medium">
-              Create your first workflow →
-            </button>
-          </div>
+          <EmptyState
+            icon={Workflow}
+            title="No workflows yet"
+            description="Build your first automation to streamline candidate screening, notifications, and pipeline management."
+            action={{ label: 'Create Workflow', onClick: () => openBuilder() }}
+          />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {workflows.map(w => (
               <WorkflowCard
                 key={w._id}
                 workflow={w}
+                confirmDelete={confirmDeleteId === w._id}
                 onToggle={() => handleToggle(w._id)}
                 onEdit={() => openBuilder(w)}
-                onDelete={() => handleDelete(w._id)}
+                onDeleteIntent={() => setConfirmDeleteId(w._id)}
+                onDeleteCancel={() => setConfirmDeleteId(null)}
+                onDeleteConfirm={() => handleDelete(w._id)}
               />
             ))}
           </div>
@@ -170,73 +174,72 @@ const Workflows = () => {
   );
 };
 
-const WorkflowCard = ({ workflow, onToggle, onEdit, onDelete }) => (
-  <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border border-gray-200">
-    <div className="flex items-start justify-between mb-4">
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-2">
-          <h3 className="text-lg font-semibold text-gray-800">{workflow.name}</h3>
-          <span className={`px-2 py-1 rounded text-xs font-medium ${
-            workflow.enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-          }`}>
+const WorkflowCard = ({ workflow, confirmDelete, onToggle, onEdit, onDeleteIntent, onDeleteCancel, onDeleteConfirm }) => (
+  <Card className="relative">
+    <div className="flex items-start justify-between mb-3">
+      <div className="flex-1 min-w-0 pr-3">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <h3 className="text-sm font-semibold text-zinc-900">{workflow.name}</h3>
+          <Badge variant={workflow.enabled ? 'success' : 'default'} size="sm">
             {workflow.enabled ? 'Active' : 'Inactive'}
-          </span>
+          </Badge>
         </div>
-
         {workflow.triggers?.length > 0 && (
-          <div className="mb-3">
-            <p className="text-xs font-medium text-gray-600 mb-1">Triggers:</p>
-            <div className="flex flex-wrap gap-2">
-              {workflow.triggers.map((t, i) => (
-                <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                  {t.event}
-                </span>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {workflow.triggers.map((t, i) => (
+              <Badge key={i} variant="brand" size="sm">{t.event}</Badge>
+            ))}
           </div>
         )}
-
-        <p className="text-sm text-gray-600">
-          {workflow.steps?.length || 0} step{workflow.steps?.length !== 1 ? 's' : ''}
-        </p>
+        <p className="text-xs text-zinc-400">{workflow.steps?.length || 0} step{workflow.steps?.length !== 1 ? 's' : ''}</p>
       </div>
-
-      <div className="flex gap-2">
+      <div className="flex items-center gap-0.5 flex-shrink-0">
         <button
           onClick={onToggle}
-          className={`p-2 rounded transition-colors ${
-            workflow.enabled ? 'hover:bg-yellow-50 text-yellow-600' : 'hover:bg-green-50 text-green-600'
-          }`}
-          title={workflow.enabled ? 'Deactivate' : 'Activate'}
+          aria-label={workflow.enabled ? 'Deactivate workflow' : 'Activate workflow'}
+          className={`p-1.5 rounded-lg transition-colors ${workflow.enabled ? 'hover:bg-amber-50 text-amber-600' : 'hover:bg-green-50 text-green-600'}`}
         >
           {workflow.enabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </button>
-        <button onClick={onEdit} className="p-2 hover:bg-gray-100 rounded transition-colors" title="Edit">
-          <Edit2 className="w-4 h-4 text-gray-600" />
+        <button onClick={onEdit} aria-label="Edit workflow" className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors">
+          <Edit2 className="w-3.5 h-3.5 text-zinc-500" />
         </button>
-        <button onClick={onDelete} className="p-2 hover:bg-red-50 rounded transition-colors" title="Delete">
-          <Trash2 className="w-4 h-4 text-red-600" />
+        <button onClick={onDeleteIntent} aria-label="Delete workflow" className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
+          <Trash2 className="w-3.5 h-3.5 text-red-500" />
         </button>
       </div>
     </div>
 
     {workflow.steps?.length > 0 && (
-      <div className="border-t pt-4 mt-4">
-        <p className="text-xs font-medium text-gray-600 mb-2">Steps:</p>
+      <div className="border-t border-zinc-100 pt-3 mt-3">
         <div className="space-y-1">
           {workflow.steps.slice(0, 3).map((step, i) => (
-            <div key={i} className="text-sm text-gray-600 flex items-center gap-2">
-              <span className="text-xs text-gray-400">{i + 1}.</span>
+            <div key={i} className="text-xs text-zinc-500 flex items-center gap-2">
+              <span className="w-4 h-4 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center text-2xs font-semibold flex-shrink-0">{i + 1}</span>
               <span className="capitalize">{step.type.replace(/([A-Z])/g, ' $1').trim()}</span>
             </div>
           ))}
           {workflow.steps.length > 3 && (
-            <p className="text-xs text-gray-500">+{workflow.steps.length - 3} more</p>
+            <p className="text-xs text-zinc-400 pl-6">+{workflow.steps.length - 3} more</p>
           )}
         </div>
       </div>
     )}
-  </div>
+
+    {confirmDelete && (
+      <div className="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center gap-3 p-4">
+        <div className="flex items-center gap-2 text-zinc-700">
+          <AlertTriangle className="w-5 h-5 text-amber-500" />
+          <span className="text-sm font-medium">Delete this workflow?</span>
+        </div>
+        <p className="text-xs text-zinc-500 text-center">All runs for this workflow will also be removed.</p>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onDeleteCancel}>Cancel</Button>
+          <Button variant="danger" size="sm" onClick={onDeleteConfirm}>Delete</Button>
+        </div>
+      </div>
+    )}
+  </Card>
 );
 
 const RunsTable = ({ runs, onAction, hasRole }) => {
@@ -244,80 +247,81 @@ const RunsTable = ({ runs, onAction, hasRole }) => {
 
   if (!runs.length) {
     return (
-      <div className="bg-white rounded-lg shadow p-12 text-center">
-        <Activity className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">No workflow runs yet. Runs appear here when workflows are triggered.</p>
-      </div>
+      <EmptyState
+        icon={Activity}
+        title="No workflow runs yet"
+        description="Runs appear here when workflows are triggered by application events."
+      />
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Workflow</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">State</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Step</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Started</th>
-            {canControl && <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {runs.map(run => (
-            <tr key={run._id} className="hover:bg-gray-50">
-              <td className="px-4 py-3 font-medium text-gray-800">
-                {run.workflowId?.name || '—'}
-              </td>
-              <td className="px-4 py-3">
-                <span className={`px-2 py-1 rounded text-xs font-medium ${STATE_COLORS[run.state] || 'bg-gray-100 text-gray-600'}`}>
-                  {run.state}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-gray-600">
-                {run.stepPointer} / {run.workflowId?.steps?.length || '?'}
-              </td>
-              <td className="px-4 py-3 text-gray-500">
-                {run.startedAt ? new Date(run.startedAt).toLocaleString() : '—'}
-              </td>
-              {canControl && (
-                <td className="px-4 py-3">
-                  <div className="flex gap-1">
-                    {run.state === 'running' && (
-                      <button
-                        onClick={() => onAction(run._id, 'pause')}
-                        className="p-1 hover:bg-yellow-50 rounded text-yellow-600"
-                        title="Pause"
-                      >
-                        <Pause className="w-4 h-4" />
-                      </button>
-                    )}
-                    {run.state === 'paused' && (
-                      <button
-                        onClick={() => onAction(run._id, 'resume')}
-                        className="p-1 hover:bg-green-50 rounded text-green-600"
-                        title="Resume"
-                      >
-                        <Play className="w-4 h-4" />
-                      </button>
-                    )}
-                    {['running', 'paused', 'queued'].includes(run.state) && (
-                      <button
-                        onClick={() => onAction(run._id, 'cancel')}
-                        className="p-1 hover:bg-red-50 rounded text-red-600"
-                        title="Cancel"
-                      >
-                        <Square className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </td>
-              )}
+    <Card padding="none">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-zinc-50 border-b border-zinc-200">
+              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Workflow</th>
+              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">State</th>
+              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Progress</th>
+              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Started</th>
+              {canControl && <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Actions</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-zinc-100">
+            {runs.map(run => (
+              <tr key={run._id} className="hover:bg-zinc-50 transition-colors">
+                <td className="px-5 py-3.5 font-medium text-zinc-800">
+                  {run.workflowId?.name || '—'}
+                </td>
+                <td className="px-5 py-3.5">
+                  <Badge variant={stateToBadgeVariant(run.state)} size="sm">{run.state}</Badge>
+                </td>
+                <td className="px-5 py-3.5 text-zinc-500 text-xs">
+                  Step {run.stepPointer} / {run.workflowId?.steps?.length || '?'}
+                </td>
+                <td className="px-5 py-3.5 text-zinc-400 text-xs">
+                  {run.startedAt ? new Date(run.startedAt).toLocaleString() : '—'}
+                </td>
+                {canControl && (
+                  <td className="px-5 py-3.5">
+                    <div className="flex gap-1">
+                      {run.state === 'running' && (
+                        <button
+                          onClick={() => onAction(run._id, 'pause')}
+                          aria-label="Pause run"
+                          className="p-1.5 hover:bg-amber-50 rounded-lg text-amber-600 transition-colors"
+                        >
+                          <Pause className="w-4 h-4" />
+                        </button>
+                      )}
+                      {run.state === 'paused' && (
+                        <button
+                          onClick={() => onAction(run._id, 'resume')}
+                          aria-label="Resume run"
+                          className="p-1.5 hover:bg-green-50 rounded-lg text-green-600 transition-colors"
+                        >
+                          <Play className="w-4 h-4" />
+                        </button>
+                      )}
+                      {['running', 'paused', 'queued'].includes(run.state) && (
+                        <button
+                          onClick={() => onAction(run._id, 'cancel')}
+                          aria-label="Cancel run"
+                          className="p-1.5 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
+                        >
+                          <Square className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 };
 
