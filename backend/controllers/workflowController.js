@@ -1,4 +1,5 @@
 const Workflow = require('../models/Workflow');
+const AuditLog = require('../models/AuditLog');
 const { previewWorkflow } = require('../services/workflowEngine');
 const { validationResult } = require('express-validator');
 
@@ -50,6 +51,18 @@ exports.createWorkflow = async (req, res) => {
       createdBy: req.user._id
     });
 
+    // Audit log
+    await AuditLog.create({
+      user: req.user._id,
+      action: 'CREATE',
+      resource: 'Workflow',
+      resourceId: workflow._id,
+      changes: { after: workflow.toObject() },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      correlationId: req.correlationId
+    });
+
     res.status(201).json({ success: true, data: workflow });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -69,6 +82,8 @@ exports.updateWorkflow = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Workflow not found' });
     }
 
+    const oldState = workflow.toObject();
+
     const { name, description, triggers, steps, enabled } = req.body;
     if (name       !== undefined) workflow.name        = name;
     if (description!== undefined) workflow.description = description;
@@ -77,6 +92,19 @@ exports.updateWorkflow = async (req, res) => {
     if (enabled    !== undefined) workflow.enabled     = enabled;
 
     await workflow.save();
+
+    // Audit log
+    await AuditLog.create({
+      user: req.user._id,
+      action: 'UPDATE',
+      resource: 'Workflow',
+      resourceId: workflow._id,
+      changes: { before: oldState, after: workflow.toObject() },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      correlationId: req.correlationId
+    });
+
     res.json({ success: true, data: workflow });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -91,7 +119,21 @@ exports.deleteWorkflow = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Workflow not found' });
     }
 
+    const deletedData = workflow.toObject();
     await workflow.deleteOne();
+
+    // Audit log
+    await AuditLog.create({
+      user: req.user._id,
+      action: 'DELETE',
+      resource: 'Workflow',
+      resourceId: workflow._id,
+      changes: { before: deletedData },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      correlationId: req.correlationId
+    });
+
     res.json({ success: true, message: 'Workflow deleted' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -106,8 +148,22 @@ exports.toggleWorkflow = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Workflow not found' });
     }
 
+    const oldState = workflow.toObject();
     workflow.enabled = !workflow.enabled;
     await workflow.save();
+
+    // Audit log
+    await AuditLog.create({
+      user: req.user._id,
+      action: 'UPDATE',
+      resource: 'Workflow',
+      resourceId: workflow._id,
+      changes: { before: oldState, after: workflow.toObject() },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      correlationId: req.correlationId
+    });
+
     res.json({ success: true, data: { enabled: workflow.enabled } });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

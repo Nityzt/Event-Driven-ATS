@@ -3,6 +3,7 @@ const Candidate = require('../models/Candidate');
 const Job = require('../models/Job');
 const AuditLog = require('../models/AuditLog');
 const workflowEngine = require('../services/workflowEngine');
+const eventEmitter = require('../services/eventEmitter');
 
 // @desc    Get all applications
 // @route   GET /api/applications
@@ -222,7 +223,14 @@ exports.createApplication = async (req, res) => {
     });
 
     // Trigger Application.created workflows asynchronously after response
+    eventEmitter.emit('application:created', {
+      applicationId: application._id,
+      candidateId,
+      jobId
+    });
+
     workflowEngine.trigger('Application.created', {
+      correlationId: req.correlationId,
       applicationId: application._id,
       candidateId:   candidateId,
       jobId:         jobId,
@@ -308,6 +316,7 @@ exports.updateApplication = async (req, res) => {
       const candidate = await Candidate.findById(application.candidateId);
       const job = await Job.findById(application.jobId);
       workflowEngine.trigger('Stage.changed', {
+        correlationId: req.correlationId,
         applicationId: application._id,
         candidateId:   application.candidateId,
         jobId:         application.jobId,

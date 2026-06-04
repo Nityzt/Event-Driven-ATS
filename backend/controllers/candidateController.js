@@ -1,13 +1,21 @@
 const Candidate = require('../models/Candidate');
 const AuditLog = require('../models/AuditLog');
 const { extractTextFromPDF, extractSkills } = require('../services/pdfService');
+const eventEmitter = require('../services/eventEmitter');
+
+function parseArrayField(value, fallback = []) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') return JSON.parse(value);
+  return fallback;
+}
 
 // @desc    Get all candidates
 // @route   GET /api/candidates
 // @access  Private
 exports.getCandidates = async (req, res) => {
   try {
-    const { search, status, page = 1, limit = 10 } = req.query;
+    const { search, status, page = 1, limit = 10, cursor } = req.query;
     
     const query = {};
     
@@ -21,15 +29,49 @@ exports.getCandidates = async (req, res) => {
       query.status = status;
     }
     
-    // Pagination
-    const skip = (page - 1) * limit;
+    const countQuery = { ...query };
+    const limitVal = parseInt(limit);
+    let candidates;
+    let hasMore = false;
+    let nextCursor = null;
     
-    const candidates = await Candidate.find(query)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 });
+    if (cursor) {
+      const cursorDoc = await Candidate.findById(cursor);
+      if (cursorDoc) {
+        query.$or = [
+          { createdAt: { $lt: cursorDoc.createdAt } },
+          {
+            createdAt: cursorDoc.createdAt,
+            _id: { $lt: cursorDoc._id }
+          }
+        ];
+      }
+      
+      candidates = await Candidate.find(query)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limitVal + 1);
+        
+      if (candidates.length > limitVal) {
+        hasMore = true;
+        nextCursor = candidates[limitVal - 1]._id.toString();
+        candidates.pop();
+      }
+    } else {
+      const skip = (parseInt(page) - 1) * limitVal;
+      
+      candidates = await Candidate.find(query)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(skip)
+        .limit(limitVal + 1);
+        
+      if (candidates.length > limitVal) {
+        hasMore = true;
+        nextCursor = candidates[limitVal - 1]._id.toString();
+        candidates.pop();
+      }
+    }
     
-    const total = await Candidate.countDocuments(query);
+    const total = await Candidate.countDocuments(countQuery);
     
     res.json({
       success: true,
@@ -37,9 +79,11 @@ exports.getCandidates = async (req, res) => {
         candidates,
         pagination: {
           page: parseInt(page),
-          limit: parseInt(limit),
+          limit: limitVal,
           total,
-          pages: Math.ceil(total / limit)
+          pages: Math.ceil(total / limitVal),
+          nextCursor,
+          hasMore
         }
       }
     });
@@ -71,7 +115,7 @@ exports.getCandidate = async (req, res) => {
       success: true,
       data: candidate
     });
-    
+
   } catch (error) {
     console.error('Get candidate error:', error);
     res.status(500).json({
@@ -86,13 +130,23 @@ exports.getCandidate = async (req, res) => {
 // @access  Private (Recruiter, Admin)
 exports.createCandidate = async (req, res) => {
   try {
-    const { name, email, phone, skills, experience, status } = req.body;
-    
+    const { name, email, phone, skills, experience, status, location, seniority } = req.body;
+
     // Handle resume file if uploaded
     let resumeData = {};
     let extractedSkills = [];
     
     if (req.file) {
+      // Virus scan stub
+      const { virusCheck } = require('../services/pdfService');
+      const isSafe = await virusCheck(req.file.path);
+      if (!isSafe) {
+        return res.status(400).json({
+          success: false,
+          error: 'Resume failed security scan (malware detected).'
+        });
+      }
+
       // Extract text from PDF
       const extractedText = await extractTextFromPDF(req.file.path);
       
@@ -108,9 +162,8 @@ exports.createCandidate = async (req, res) => {
     }
     
     // Combine manual skills with extracted skills
-    const allSkills = skills 
-      ? [...new Set([...JSON.parse(skills), ...extractedSkills])]
-      : extractedSkills;
+    const manualSkills = parseArrayField(skills);
+    const allSkills = [...new Set([...manualSkills, ...extractedSkills])];
     
     // Create candidate
     const candidate = await Candidate.create({
@@ -118,9 +171,11 @@ exports.createCandidate = async (req, res) => {
       email,
       phone,
       skills: allSkills,
-      experience: experience ? JSON.parse(experience) : [],
+      experience: parseArrayField(experience),
       status: status || 'Active',
       resume: resumeData,
+      location,
+      seniority,
       timeline: [{
         event: 'Created',
         description: 'Candidate profile created'
@@ -171,17 +226,28 @@ exports.updateCandidate = async (req, res) => {
     const oldState = candidate.toObject();
     
     // Update fields
-    const { name, email, phone, skills, experience, status } = req.body;
-    
+    const { name, email, phone, skills, experience, status, location, seniority } = req.body;
+
     if (name) candidate.name = name;
     if (email) candidate.email = email;
     if (phone) candidate.phone = phone;
-    if (skills) candidate.skills = JSON.parse(skills);
-    if (experience) candidate.experience = JSON.parse(experience);
+    if (skills !== undefined) candidate.skills = parseArrayField(skills);
+    if (experience !== undefined) candidate.experience = parseArrayField(experience);
     if (status) candidate.status = status;
+    if (location !== undefined) candidate.location = location;
+    if (seniority !== undefined) candidate.seniority = seniority;
     
     // Handle new resume upload
     if (req.file) {
+      const { virusCheck } = require('../services/pdfService');
+      const isSafe = await virusCheck(req.file.path);
+      if (!isSafe) {
+        return res.status(400).json({
+          success: false,
+          error: 'Resume failed security scan (malware detected).'
+        });
+      }
+
       const extractedText = await extractTextFromPDF(req.file.path);
       const extractedSkills = extractSkills(extractedText);
       
@@ -203,27 +269,29 @@ exports.updateCandidate = async (req, res) => {
     });
     
     await candidate.save();
-    
+
     // Audit log
     await AuditLog.create({
       user: req.user._id,
       action: 'UPDATE',
       resource: 'Candidate',
       resourceId: candidate._id,
-      changes: { 
-        before: oldState, 
-        after: candidate.toObject() 
+      changes: {
+        before: oldState,
+        after: candidate.toObject()
       },
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
       correlationId: req.correlationId
     });
-    
+
     res.json({
       success: true,
       data: candidate
     });
-    
+
+    eventEmitter.emit('candidate:updated', { candidateId: candidate._id });
+
   } catch (error) {
     console.error('Update candidate error:', error);
     res.status(500).json({

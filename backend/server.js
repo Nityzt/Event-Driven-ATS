@@ -54,11 +54,13 @@ app.use(morganLogger);
 
 // Health check
 app.get('/healthz', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'Backend is running',
+  const dbConnected = mongoose.connection.readyState === 1;
+  const status = dbConnected ? 'ok' : 'error';
+  res.status(dbConnected ? 200 : 500).json({
+    status,
+    message: dbConnected ? 'Backend is running' : 'Database disconnected',
     timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    database: dbConnected ? 'connected' : 'disconnected',
     correlationId: req.correlationId
   });
 });

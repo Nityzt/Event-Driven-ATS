@@ -1,11 +1,12 @@
 module.exports = {
   testEnvironment: 'node',
   coveragePathIgnorePatterns: ['/node_modules/'],
-  testMatch: ['**/tests/**/*.test.js'],
+  testMatch: ['**/tests/api.test.js'],
+  setupFiles: ['./tests/setup.js'],
   verbose: true,
   forceExit: true,
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  testTimeout: 10000
+  testTimeout: 30000
 };

@@ -1,12 +1,13 @@
 const Job = require('../models/Job');
 const AuditLog = require('../models/AuditLog');
+const eventEmitter = require('../services/eventEmitter');
 
 // @desc    Get all jobs
 // @route   GET /api/jobs
 // @access  Private
 exports.getJobs = async (req, res) => {
   try {
-    const { search, status, location, seniority, page = 1, limit = 10 } = req.query;
+    const { search, status, location, seniority, page = 1, limit = 10, cursor } = req.query;
     
     const query = {};
     
@@ -30,16 +31,51 @@ exports.getJobs = async (req, res) => {
       query.seniority = seniority;
     }
     
-    // Pagination
-    const skip = (page - 1) * limit;
+    const countQuery = { ...query };
+    const limitVal = parseInt(limit);
+    let jobs;
+    let hasMore = false;
+    let nextCursor = null;
     
-    const jobs = await Job.find(query)
-      .populate('postedBy', 'name email')
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 });
+    if (cursor) {
+      const cursorDoc = await Job.findById(cursor);
+      if (cursorDoc) {
+        query.$or = [
+          { createdAt: { $lt: cursorDoc.createdAt } },
+          {
+            createdAt: cursorDoc.createdAt,
+            _id: { $lt: cursorDoc._id }
+          }
+        ];
+      }
+      
+      jobs = await Job.find(query)
+        .populate('postedBy', 'name email')
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limitVal + 1);
+        
+      if (jobs.length > limitVal) {
+        hasMore = true;
+        nextCursor = jobs[limitVal - 1]._id.toString();
+        jobs.pop();
+      }
+    } else {
+      const skip = (parseInt(page) - 1) * limitVal;
+      
+      jobs = await Job.find(query)
+        .populate('postedBy', 'name email')
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(skip)
+        .limit(limitVal + 1);
+        
+      if (jobs.length > limitVal) {
+        hasMore = true;
+        nextCursor = jobs[limitVal - 1]._id.toString();
+        jobs.pop();
+      }
+    }
     
-    const total = await Job.countDocuments(query);
+    const total = await Job.countDocuments(countQuery);
     
     res.json({
       success: true,
@@ -47,9 +83,11 @@ exports.getJobs = async (req, res) => {
         jobs,
         pagination: {
           page: parseInt(page),
-          limit: parseInt(limit),
+          limit: limitVal,
           total,
-          pages: Math.ceil(total / limit)
+          pages: Math.ceil(total / limitVal),
+          nextCursor,
+          hasMore
         }
       }
     });
@@ -82,7 +120,7 @@ exports.getJob = async (req, res) => {
       success: true,
       data: job
     });
-    
+
   } catch (error) {
     console.error('Get job error:', error);
     res.status(500).json({
@@ -186,27 +224,29 @@ exports.updateJob = async (req, res) => {
     if (status !== undefined) job.status = status;
     
     await job.save();
-    
+
     // Audit log
     await AuditLog.create({
       user: req.user._id,
       action: 'UPDATE',
       resource: 'Job',
       resourceId: job._id,
-      changes: { 
-        before: oldState, 
-        after: job.toObject() 
+      changes: {
+        before: oldState,
+        after: job.toObject()
       },
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
       correlationId: req.correlationId
     });
-    
+
     res.json({
       success: true,
       data: job
     });
-    
+
+    eventEmitter.emit('job:updated', { jobId: job._id });
+
   } catch (error) {
     console.error('Update job error:', error);
     res.status(500).json({

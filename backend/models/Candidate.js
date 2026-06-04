@@ -36,6 +36,14 @@ const candidateSchema = new mongoose.Schema({
     current: Boolean,
     description: String
   }],
+  location: {
+    type: String,
+    trim: true
+  },
+  seniority: {
+    type: String,
+    enum: ['Entry', 'Mid', 'Senior', 'Lead', 'Executive']
+  },
   status: {
     type: String,
     enum: ['Active', 'Inactive', 'Hired', 'Rejected'],
@@ -54,11 +62,22 @@ const candidateSchema = new mongoose.Schema({
 });
 
 // Text index for search functionality
-candidateSchema.index({ 
-  name: 'text', 
-  email: 'text', 
+candidateSchema.index({
+  name: 'text',
+  email: 'text',
   skills: 'text',
-  'resume.extractedText': 'text'
+  location: 'text',
+  'resume.extractedText': 'text',
+  'experience.title': 'text'
+}, {
+  weights: {
+    name: 10,
+    skills: 8,
+    'experience.title': 3,
+    location: 2,
+    email: 1,
+    'resume.extractedText': 1
+  }
 });
 
 module.exports = mongoose.model('Candidate', candidateSchema);

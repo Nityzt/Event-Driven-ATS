@@ -31,11 +31,13 @@ const runSchema = new mongoose.Schema({
     createdAt: {
       type: Date,
       default: Date.now
-    }
+    },
+    correlationId: String
   }],
   startedAt: Date,
   completedAt: Date,
-  failedAt: Date
+  failedAt: Date,
+  correlationId: String
 }, {
   timestamps: true
 });
@@ -43,5 +45,6 @@ const runSchema = new mongoose.Schema({
 // Index for efficient queries
 runSchema.index({ workflowId: 1, applicationId: 1 });
 runSchema.index({ state: 1, createdAt: -1 });
+runSchema.index({ correlationId: 1 });
 
 module.exports = mongoose.model('Run', runSchema);

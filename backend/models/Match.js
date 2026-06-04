@@ -45,14 +45,38 @@ const matchSchema = new mongoose.Schema({
       default: 0,
       min: 0,
       max: 100
+    },
+    hygieneBonus: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    baseScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
     }
   },
-  matchedSkills: [{
-    type: String
-  }],
-  missingSkills: [{
-    type: String
-  }],
+  matchedSkills: {
+    required: [{
+      type: String
+    }],
+    operational: [{
+      type: String
+    }],
+    hygiene: [{
+      type: String
+    }]
+  },
+  missingSkills: {
+    required: [{
+      type: String
+    }],
+    operational: [{
+      type: String
+    }]
+  },
   matchQuality: {
     type: String,
     enum: ['excellent', 'good', 'fair', 'poor'],
@@ -76,6 +100,15 @@ matchSchema.index({ candidate: 1, overallScore: -1 });
 // Virtual to determine if this is a strong match
 matchSchema.virtual('isStrongMatch').get(function() {
   return this.overallScore >= 75;
+});
+
+matchSchema.virtual('score').get(function() {
+  return this.overallScore;
+});
+
+matchSchema.virtual('baseScore').get(function() {
+  const hygieneBonus = (this.matchedSkills?.hygiene?.length || 0) * 5;
+  return Math.max(0, this.overallScore - hygieneBonus);
 });
 
 matchSchema.set('toJSON', { virtuals: true });
