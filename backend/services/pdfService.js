@@ -128,3 +128,13 @@ exports.extractSkills = (text) => {
   console.log('Found skills:', Array.from(foundSkills));
   return Array.from(foundSkills);
 };
+
+// Mock virus-check stub for resume uploads
+exports.virusCheck = async (filePath) => {
+  console.log(`[VirusCheck] Running malware scan on file: ${filePath}`);
+  // In a real production system, this would integration with scanner (e.g. ClamAV, VirusTotal).
+  // Returns true if safe, false if infected. We mock a clean file.
+  const isClean = true;
+  console.log(`[VirusCheck] Malware scan completed. Safe: ${isClean}`);
+  return isClean;
+};

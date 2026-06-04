@@ -4,6 +4,44 @@ const Job = require('../models/Job');
 
 const eventEmitter = require('./eventEmitter');
 
+function normalizeSkill(skill) {
+  return String(skill || '').toLowerCase().trim();
+}
+
+function canonicalSkill(skill) {
+  return String(skill || '').trim();
+}
+
+function isSkillMatch(candidateSkill, targetSkill) {
+  const candidate = normalizeSkill(candidateSkill);
+  const target = normalizeSkill(targetSkill);
+  if (!candidate || !target) return false;
+  return candidate === target || candidate.includes(target) || target.includes(candidate);
+}
+
+function matchSkillGroup(candidateSkills, targetSkills) {
+  const matched = [];
+  const missing = [];
+
+  for (const targetSkill of targetSkills || []) {
+    const normalizedTarget = normalizeSkill(targetSkill);
+    const hasMatch = candidateSkills.some(candidateSkill => isSkillMatch(candidateSkill, normalizedTarget));
+
+    if (hasMatch) {
+      matched.push(canonicalSkill(targetSkill));
+    } else {
+      missing.push(canonicalSkill(targetSkill));
+    }
+  }
+
+  return { matched, missing };
+}
+
+function percent(part, whole) {
+  if (!whole) return 100;
+  return (part / whole) * 100;
+}
+
 class MatchingEngine {
   constructor() {
     // Configurable weights (should sum to 100)
@@ -30,70 +68,88 @@ class MatchingEngine {
    * @returns {Object} Match score breakdown
    */
   async calculateMatch(candidate, job) {
+    const skillAnalysis = this.analyzeSkills(candidate, job);
+
     const breakdown = {
-      skillsScore: this.calculateSkillsScore(candidate, job),
+      skillsScore: this.calculateSkillsScore(skillAnalysis, job, candidate),
       experienceScore: this.calculateExperienceScore(candidate, job),
       locationScore: this.calculateLocationScore(candidate, job),
       educationScore: this.calculateEducationScore(candidate, job)
     };
 
-    // Calculate weighted overall score
-    const overallScore = (
+    // Calculate weighted base score, then apply hygiene boost (+5 each, capped at 100).
+    const baseScore = (
       (breakdown.skillsScore * this.weights.skills / 100) +
       (breakdown.experienceScore * this.weights.experience / 100) +
       (breakdown.locationScore * this.weights.location / 100) +
       (breakdown.educationScore * this.weights.education / 100)
     );
-
-    // Determine matched and missing skills
-    const { matchedSkills, missingSkills } = this.analyzeSkills(candidate, job);
+    const hygieneBonus = skillAnalysis.matchedSkills.hygiene.length * 5;
+    const overallScore = Math.min(100, baseScore + hygieneBonus);
 
     // Determine match quality
     const matchQuality = this.determineMatchQuality(overallScore);
 
     return {
       overallScore: Math.round(overallScore * 100) / 100, // Round to 2 decimals
-      breakdown,
-      matchedSkills,
-      missingSkills,
+      breakdown: {
+        ...breakdown,
+        hygieneBonus,
+        baseScore: Math.round(baseScore * 100) / 100
+      },
+      matchedSkills: skillAnalysis.matchedSkills,
+      missingSkills: skillAnalysis.missingSkills,
       matchQuality
     };
   }
 
+  calculateTitleSimilarity(candidate, job) {
+    const experience = candidate.experience;
+    const lastTitle = (Array.isArray(experience) && experience.length > 0)
+      ? (experience[experience.length - 1]?.title || '')
+      : '';
+    const candidateTitle = lastTitle || (candidate.seniority ? `${candidate.seniority} Developer` : '');
+    if (!candidateTitle) return 50;
+
+    const tokenize = str => str.toLowerCase().split(/[\s\-_/]+/).filter(t => t.length >= 3);
+    const candidateTokens = new Set(tokenize(candidateTitle));
+    const jobTokens = new Set(tokenize(job.title || ''));
+    if (jobTokens.size === 0) return 50;
+
+    const intersection = [...candidateTokens].filter(t => jobTokens.has(t));
+    const union = new Set([...candidateTokens, ...jobTokens]);
+    return Math.round((intersection.length / union.size) * 100);
+  }
+
   /**
-   * Calculate skills match score
-   * @param {Object} candidate
+   * Calculate skills match score (blends required/operational skills with title similarity)
+   * @param {Object} skillAnalysis - output of analyzeSkills()
    * @param {Object} job
+   * @param {Object} candidate - needed for title similarity
    * @returns {Number} Score from 0-100
    */
-  calculateSkillsScore(candidate, job) {
-    if (!job.requirements?.skills || job.requirements.skills.length === 0) {
-      return 100; // No skills required = perfect match
+  calculateSkillsScore(skillAnalysis, job, candidate) {
+    const requiredSkills = job.requiredSkills || [];
+    const operationalSkills = job.operationalSkills || [];
+    const requiredScore = percent(skillAnalysis.matchedSkills.required.length, requiredSkills.length);
+    const operationalScore = percent(skillAnalysis.matchedSkills.operational.length, operationalSkills.length);
+
+    let rawSkillsScore;
+    if (!requiredSkills.length && !operationalSkills.length) {
+      rawSkillsScore = 100;
+    } else if (requiredSkills.length > 0 && skillAnalysis.matchedSkills.required.length === 0) {
+      rawSkillsScore = 0; // hard filter: no required skills matched
+    } else if (!requiredSkills.length) {
+      rawSkillsScore = operationalScore;
+    } else if (!operationalSkills.length) {
+      rawSkillsScore = requiredScore;
+    } else {
+      // Required skills carry most of the skills score, while operational skills refine rank.
+      rawSkillsScore = Math.min(100, (requiredScore * 0.7) + (operationalScore * 0.3));
     }
 
-    const candidateSkills = (candidate.skills || []).map(s => s.toLowerCase().trim());
-    const requiredSkills = job.requirements.skills.map(s => s.toLowerCase().trim());
-
-    if (candidateSkills.length === 0) {
-      return 0; // Candidate has no skills
-    }
-
-    // Calculate exact matches
-    const matchedCount = requiredSkills.filter(skill => 
-      candidateSkills.includes(skill)
-    ).length;
-
-    // Calculate partial matches (substring matching for related skills)
-    const partialMatches = requiredSkills.filter(reqSkill => 
-      !candidateSkills.includes(reqSkill) && 
-      candidateSkills.some(candSkill => 
-        candSkill.includes(reqSkill) || reqSkill.includes(candSkill)
-      )
-    ).length;
-
-    const totalScore = (matchedCount * 100 + partialMatches * 50) / requiredSkills.length;
-    
-    return Math.min(100, totalScore);
+    const titleSimilarity = candidate ? this.calculateTitleSimilarity(candidate, job) : 50;
+    return Math.min(100, (rawSkillsScore * 0.85) + (titleSimilarity * 0.15));
   }
 
   /**
@@ -103,8 +159,8 @@ class MatchingEngine {
    * @returns {Number} Score from 0-100
    */
   calculateExperienceScore(candidate, job) {
-    const candidateYears = candidate.experience?.yearsOfExperience || 0;
-    const requiredYears = job.requirements?.minExperience || 0;
+    const candidateYears = this.calculateCandidateYears(candidate);
+    const requiredYears = this.requiredYearsForSeniority(job.seniority);
 
     if (requiredYears === 0) {
       return 100; // No experience required
@@ -182,7 +238,7 @@ class MatchingEngine {
    */
   calculateEducationScore(candidate, job) {
     const candidateEducation = candidate.education?.level?.toLowerCase() || '';
-    const requiredEducation = job.requirements?.education?.toLowerCase() || '';
+    const requiredEducation = job.education?.toLowerCase() || '';
 
     if (!requiredEducation) {
       return 100; // No education requirement
@@ -229,21 +285,48 @@ class MatchingEngine {
    * @returns {Object} { matchedSkills, missingSkills }
    */
   analyzeSkills(candidate, job) {
-    const candidateSkills = (candidate.skills || []).map(s => s.toLowerCase().trim());
-    const requiredSkills = (job.requirements?.skills || []).map(s => s.toLowerCase().trim());
-
-    const matchedSkills = requiredSkills.filter(skill => 
-      candidateSkills.includes(skill)
-    );
-
-    const missingSkills = requiredSkills.filter(skill => 
-      !candidateSkills.includes(skill)
-    );
+    const candidateSkills = (candidate.skills || []).map(normalizeSkill);
+    const required = matchSkillGroup(candidateSkills, job.requiredSkills || []);
+    const operational = matchSkillGroup(candidateSkills, job.operationalSkills || []);
+    const hygiene = matchSkillGroup(candidateSkills, job.hygieneSkills || []);
 
     return {
-      matchedSkills,
-      missingSkills
+      matchedSkills: {
+        required: required.matched,
+        operational: operational.matched,
+        hygiene: hygiene.matched
+      },
+      missingSkills: {
+        required: required.missing,
+        operational: operational.missing
+      }
     };
+  }
+
+  calculateCandidateYears(candidate) {
+    if (!Array.isArray(candidate.experience) || candidate.experience.length === 0) {
+      return 0;
+    }
+
+    return candidate.experience.reduce((total, exp) => {
+      const start = exp.startDate ? new Date(exp.startDate) : null;
+      const end = exp.current ? new Date() : (exp.endDate ? new Date(exp.endDate) : null);
+      if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+        return total;
+      }
+      return total + ((end - start) / (365.25 * 24 * 60 * 60 * 1000));
+    }, 0);
+  }
+
+  requiredYearsForSeniority(seniority) {
+    const mapping = {
+      Entry: 0,
+      Mid: 2,
+      Senior: 5,
+      Lead: 7,
+      Executive: 10
+    };
+    return mapping[seniority] || 0;
   }
 
   /**
@@ -346,14 +429,14 @@ class MatchingEngine {
   async recalculateJobMatches(jobId) {
     // Get all applications for this job
     const Application = require('../models/Application');
-    const applications = await Application.find({ job: jobId });
+    const applications = await Application.find({ jobId });
 
     const results = [];
     for (const application of applications) {
       try {
         const match = await this.saveMatch(
-          application.candidate,
-          application.job,
+          application.candidateId,
+          application.jobId,
           application._id
         );
         results.push(match);
@@ -372,14 +455,14 @@ class MatchingEngine {
    */
   async recalculateCandidateMatches(candidateId) {
     const Application = require('../models/Application');
-    const applications = await Application.find({ candidate: candidateId });
+    const applications = await Application.find({ candidateId });
 
     const results = [];
     for (const application of applications) {
       try {
         const match = await this.saveMatch(
-          application.candidate,
-          application.job,
+          application.candidateId,
+          application.jobId,
           application._id
         );
         results.push(match);

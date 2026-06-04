@@ -64,12 +64,10 @@ class EmailService {
         html,
       });
 
-      // Log preview URL for development
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[Email] Preview URL:', nodemailer.getTestMessageUrl(info));
-      }
+      const previewUrl = nodemailer.getTestMessageUrl(info) || null;
+      console.log('[Email] Preview URL:', previewUrl || 'N/A');
 
-      return { success: true, messageId: info.messageId };
+      return { success: true, messageId: info.messageId, previewUrl };
     } catch (error) {
       console.error('[Email] Failed to send email:', error);
       return { success: false, error: error.message };
