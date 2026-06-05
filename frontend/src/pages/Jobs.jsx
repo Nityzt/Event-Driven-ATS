@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Edit2, Trash2, MapPin, Briefcase, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, MapPin, Briefcase, AlertTriangle, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { jobsAPI } from '../api';
+import { jobsAPI, applicationsAPI } from '../api';
 import useDebounce from '../hooks/useDebounce';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Badge from '../components/ui/Badge';
+import Badge, { stageToBadgeVariant } from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import EmptyState from '../components/ui/EmptyState';
 import PageHeader from '../components/ui/PageHeader';
 import { JobCardSkeleton } from '../components/ui/Skeleton';
+import Spinner from '../components/ui/Spinner';
+import ApplicationTimeline from '../components/timeline/ApplicationTimeline';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 const STATUS_VARIANT = { Open: 'success', Closed: 'danger', 'On Hold': 'warning' };
 
@@ -22,6 +25,7 @@ const Jobs = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [timelineJob, setTimelineJob] = useState(null);
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -97,6 +101,7 @@ const Jobs = () => {
               onDeleteIntent={() => setConfirmDeleteId(job._id)}
               onDeleteCancel={() => setConfirmDeleteId(null)}
               onDeleteConfirm={() => handleDelete(job._id)}
+              onTimeline={() => setTimelineJob(job)}
             />
           ))}
         </div>
@@ -108,11 +113,16 @@ const Jobs = () => {
         onClose={() => { setShowModal(false); setEditingJob(null); }}
         onSuccess={() => { setShowModal(false); fetchJobs(); }}
       />
+
+      <JobTimelineModal
+        job={timelineJob}
+        onClose={() => setTimelineJob(null)}
+      />
     </div>
   );
 };
 
-const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, onDeleteConfirm }) => (
+const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, onDeleteConfirm, onTimeline }) => (
   <Card className="relative">
     <div className="flex items-start justify-between mb-3">
       <div className="flex-1 min-w-0 pr-3">
@@ -129,9 +139,16 @@ const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, o
       <div className="flex items-center gap-1 flex-shrink-0">
         <Badge variant={STATUS_VARIANT[job.status] || 'default'} size="sm">{job.status || 'Open'}</Badge>
         <button
+          onClick={onTimeline}
+          aria-label="View timeline"
+          className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors ml-1"
+        >
+          <Clock className="w-3.5 h-3.5 text-zinc-500" />
+        </button>
+        <button
           onClick={onEdit}
           aria-label="Edit job"
-          className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors ml-1"
+          className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors"
         >
           <Edit2 className="w-3.5 h-3.5 text-zinc-500" />
         </button>
@@ -312,6 +329,55 @@ const JobModal = ({ open, job, onClose, onSuccess }) => {
           hint="Nice-to-haves — each adds +5% to match score"
         />
       </form>
+    </Modal>
+  );
+};
+
+const JobTimelineModal = ({ job, onClose }) => {
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!job) return;
+    setLoading(true);
+    applicationsAPI.getAll({ jobId: job._id })
+      .then(res => setApplications(res.data?.applications || []))
+      .catch(() => setApplications([]))
+      .finally(() => setLoading(false));
+  }, [job]);
+
+  return (
+    <Modal
+      open={!!job}
+      onClose={onClose}
+      title={job ? `Timeline — ${job.title}` : 'Timeline'}
+      size="xl"
+    >
+      {loading ? (
+        <div className="flex justify-center py-8"><Spinner size="md" /></div>
+      ) : applications.length === 0 ? (
+        <EmptyState
+          icon={Clock}
+          title="No applications"
+          description="No candidates have applied to this job yet."
+        />
+      ) : (
+        <div className="space-y-6">
+          {applications.map(app => (
+            <div key={app._id}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-medium text-zinc-800">
+                  {app.candidateId?.name || app.candidate?.name || 'Unknown Candidate'}
+                </span>
+                <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>
+              </div>
+              <ErrorBoundary>
+                <ApplicationTimeline applicationId={app._id} />
+              </ErrorBoundary>
+            </div>
+          ))}
+        </div>
+      )}
     </Modal>
   );
 };

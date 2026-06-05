@@ -7,6 +7,7 @@ import Badge, { stageToBadgeVariant } from '../components/ui/Badge';
 import { StatCardSkeleton } from '../components/ui/Skeleton';
 import PageHeader from '../components/ui/PageHeader';
 import { useAuth } from '../contexts/AuthContext';
+import { timeAgo } from '../lib/utils';
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -54,15 +55,6 @@ function nameToAvatarColor(name = '') {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
   return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
-}
-
-function timeAgo(iso) {
-  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
-  if (s < 60)     return 'just now';
-  if (s < 3600)   return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400)  return `${Math.floor(s / 3600)}h ago`;
-  if (s < 604800) return `${Math.floor(s / 86400)}d ago`;
-  return new Date(iso).toLocaleDateString();
 }
 
 // ── component ─────────────────────────────────────────────────────────────────
