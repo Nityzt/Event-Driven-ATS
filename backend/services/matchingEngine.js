@@ -1,6 +1,7 @@
 const Match = require('../models/Match');
 const Candidate = require('../models/Candidate');
 const Job = require('../models/Job');
+const Application = require('../models/Application');
 
 const eventEmitter = require('./eventEmitter');
 
@@ -427,8 +428,6 @@ class MatchingEngine {
    * @param {String} jobId
    */
   async recalculateJobMatches(jobId) {
-    // Get all applications for this job
-    const Application = require('../models/Application');
     const applications = await Application.find({ jobId });
 
     const results = [];
@@ -454,7 +453,6 @@ class MatchingEngine {
    * @param {String} candidateId
    */
   async recalculateCandidateMatches(candidateId) {
-    const Application = require('../models/Application');
     const applications = await Application.find({ candidateId });
 
     const results = [];

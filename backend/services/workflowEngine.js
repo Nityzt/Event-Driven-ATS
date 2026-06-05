@@ -30,7 +30,17 @@ function resolveConfig(config, context) {
 function unitToMs(unit) {
   if (unit === 'minutes') return 60 * 1000;
   if (unit === 'days')    return 24 * 60 * 60 * 1000;
-  return 60 * 60 * 1000; // default: hours
+  return 60 * 60 * 1000;
+}
+
+function logStateChange(run, before, after) {
+  return AuditLog.create({
+    action: 'WORKFLOW_STATE_CHANGE',
+    resource: 'Run',
+    resourceId: run._id,
+    changes: { before: { state: before }, after: { state: after } },
+    correlationId: run.correlationId
+  }).catch(err => console.error('[WorkflowEngine] AuditLog error:', err));
 }
 
 function pushLog(run, step, status, message, error = null) {
@@ -83,14 +93,7 @@ async function executeRun(runId, workflow, context) {
   if (!run.startedAt) run.startedAt = new Date();
   await run.save();
 
-  // Audit log for state change to running
-  await AuditLog.create({
-    action: 'WORKFLOW_STATE_CHANGE',
-    resource: 'Run',
-    resourceId: run._id,
-    changes: { before: { state: oldState }, after: { state: 'running' } },
-    correlationId: run.correlationId
-  }).catch(err => console.error('[WorkflowEngine] AuditLog running error:', err));
+  await logStateChange(run, oldState, 'running');
 
   const steps = workflow.steps;
 
@@ -149,20 +152,15 @@ async function executeRun(runId, workflow, context) {
           await run.save();
           pushLog(run, i, 'completed', `Waiting ${cfg.duration} ${cfg.unit || 'hours'}`);
 
-          // Audit log for state change to paused (wait step)
-          await AuditLog.create({
-            action: 'WORKFLOW_STATE_CHANGE',
-            resource: 'Run',
-            resourceId: run._id,
-            changes: { before: { state: 'running' }, after: { state: 'paused' } },
-            correlationId: run.correlationId
-          }).catch(err => console.error('[WorkflowEngine] AuditLog paused error:', err));
+          await logStateChange(run, 'running', 'paused');
 
           return; // halt; Agenda will call executeRun again
         }
 
         case 'webhook': {
-          await callWebhook(cfg.url, cfg.method, cfg.payload, run, i);
+          let webhookPayload = cfg.payload;
+          try { webhookPayload = JSON.parse(cfg.payload); } catch (_) {}
+          await callWebhook(cfg.url, cfg.method, webhookPayload, run, i);
           pushLog(run, i, 'completed', `Webhook called: ${cfg.url}`);
           break;
         }
@@ -177,14 +175,7 @@ async function executeRun(runId, workflow, context) {
       pushLog(run, i, 'failed', `Step ${i + 1} failed: ${err.message}`, err.message);
       await run.save();
 
-      // Audit log for state change to failed
-      await AuditLog.create({
-        action: 'WORKFLOW_STATE_CHANGE',
-        resource: 'Run',
-        resourceId: run._id,
-        changes: { before: { state: oldState }, after: { state: 'failed' } },
-        correlationId: run.correlationId
-      }).catch(e => console.error('[WorkflowEngine] AuditLog failed error:', e));
+      await logStateChange(run, oldState, 'failed');
 
       console.error(`[WorkflowEngine] Run ${runId} failed at step ${i}:`, err.message);
       return;
@@ -199,14 +190,7 @@ async function executeRun(runId, workflow, context) {
   await run.save();
   pushLog(run, steps.length, 'completed', 'Workflow run completed successfully');
 
-  // Audit log for completion
-  await AuditLog.create({
-    action: 'WORKFLOW_STATE_CHANGE',
-    resource: 'Run',
-    resourceId: run._id,
-    changes: { before: { state: prevState }, after: { state: 'completed' } },
-    correlationId: run.correlationId
-  }).catch(e => console.error('[WorkflowEngine] AuditLog completed error:', e));
+  await logStateChange(run, prevState, 'completed');
 
   eventEmitter.emit(`run:completed:${run.applicationId}`, { runId: run._id });
 }
