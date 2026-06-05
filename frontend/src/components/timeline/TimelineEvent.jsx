@@ -110,9 +110,29 @@ const TimelineEvent = ({ event, isLast }) => {
               <p className="text-sm font-semibold text-zinc-800">{getEventTitle()}</p>
               {getStatusBadge()}
             </div>
-            {getEventDescription() && (
-              <p className="text-xs text-zinc-500 mb-1">{getEventDescription()}</p>
-            )}
+            {(() => {
+              const desc = getEventDescription();
+              if (!desc) return null;
+              const previewIdx = desc.indexOf('Preview: ');
+              if (previewIdx === -1) {
+                return <p className="text-xs text-zinc-500 mb-1">{desc}</p>;
+              }
+              const textPart = desc.slice(0, previewIdx).trim();
+              const urlPart = desc.slice(previewIdx + 'Preview: '.length).trim();
+              return (
+                <p className="text-xs text-zinc-500 mb-1">
+                  {textPart && <>{textPart}{' '}</>}
+                  <a
+                    href={urlPart}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand-600 hover:underline font-medium"
+                  >
+                    Preview email →
+                  </a>
+                </p>
+              );
+            })()}
             {event.metadata && (
               <pre className="text-xs text-zinc-500 bg-zinc-50 rounded p-2 mt-1 overflow-x-auto whitespace-pre-wrap">
                 {JSON.stringify(event.metadata, null, 2)}
