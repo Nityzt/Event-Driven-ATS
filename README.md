@@ -95,7 +95,7 @@ event-driven-ats/
 │   │   ├── workflowJobs.js    # Agenda job definitions (incl. resume-run)
 │   │   └── workflowListener.js
 │   ├── tests/
-│   │   ├── api.test.js        # 18 integration tests
+│   │   ├── api.test.js        # 22 integration tests
 │   │   └── setup.js           # sets env vars before server.js loads
 │   ├── .dockerignore
 │   ├── Dockerfile
@@ -273,7 +273,7 @@ SSE timeline: `GET /api/applications/:id/timeline/stream`.
 ### Matching (`/api/matches`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/` | List all matches; filter by `jobId`, `candidateId`, `minScore`, `quality` |
+| GET | `/` | List all matches; filter by `jobId`, `candidateId`, `minScore`, `quality`, `jobTitle` (text search), `sortBy` (score\|recency) |
 | POST | `/calculate` | Score one candidate against one job (save/upsert) |
 | GET | `/score?candidateId=&jobId=` | Calculate score on-the-fly without saving |
 | GET | `/job/:jobId` | Ranked candidates for a job |
@@ -318,15 +318,18 @@ SSE timeline: `GET /api/applications/:id/timeline/stream`.
 ### API Pagination & Security Extensions
 1. **Cursor-Based Pagination**
    - Available on `GET /api/candidates` and `GET /api/jobs`.
-   - Provide an optional `cursor` query parameter representing the `_id` of the last document on the previous page.
+   - Provide an optional `cursor` query parameter (the `_id` of the last document on the previous page).
    - Response pagination object includes `nextCursor` and `hasMore`.
-   - Reverts to page-offset pagination when `cursor` is omitted.
+   - Falls back to page-offset (`page`/`limit`) when `cursor` is omitted.
 2. **Resume Virus Scanning**
-   - Candidate resume uploads automatically execute a mock security/malware scan stub.
-   - Returns `400 Bad Request` and aborts parsing if a threat is detected.
+   - Candidate resume uploads run through `pdfService.virusCheck()` (mock stub — clean by default).
+   - Returns `400 Bad Request` and aborts upload processing if the check fails.
 3. **Request Correlation IDs**
-   - All HTTP requests generate a unique correlation ID via UUID (`X-Correlation-ID` header).
-   - This ID is propagated into audit logs, workflow runs, and individual run step logs.
+   - Each request generates a UUID via Node.js `crypto.randomUUID()` as `X-Correlation-ID` header.
+   - Propagated into audit logs, workflow runs, and individual run step logs.
+4. **Input Validation**
+   - `express-validator` rules on all mutating routes: `POST /api/jobs` (title, description, location required; seniority enum), `POST /api/candidates` (name required, email valid), `POST /api/applications` (candidateId, jobId required; stage enum on PATCH).
+   - Invalid requests return `{ success: false, errors: [...] }` before hitting the controller.
 
 ---
 
@@ -340,7 +343,24 @@ npm run test:once   # run once with verbose output (CI)
 npm test            # watch mode
 ```
 
-**18 integration tests** cover: auth (register, login, validation, RBAC), workflow CRUD + toggle + preview, matching calculation, application creation, webhook retry behaviour, rate-limit enforcement, metrics endpoint, health endpoint.
+**22 integration tests** cover: auth (register, login, validation, RBAC), workflow CRUD + toggle + preview, matching calculation, application creation, webhook retry behaviour, idempotency guard, input-validation 400s (jobs/candidates/applications), rate-limit enforcement, metrics endpoint, health endpoint.
+
+---
+
+## Matching Engine Details
+
+Scoring weights (sum to 100):
+
+| Dimension | Weight | Notes |
+|---|---|---|
+| Skills | 50% | Required skills: 70%, operational: 30% of raw; blended with title similarity (15%). **Hard filter**: 0 required-skills matched → skills score = 0 |
+| Experience | 30% | Years derived from `experience[]` array vs seniority-level requirement |
+| Location | 10% | Exact string match |
+| Education | 10% | Ranked level comparison (high school → PhD) |
+
+Hygiene skills: each matched hygiene skill adds **+5 points** to the final score after weighting (capped at 100).
+
+Match quality: excellent ≥ 85, good ≥ 70, fair ≥ 50, poor < 50.
 
 ---
 
@@ -357,9 +377,11 @@ For each matching enabled Workflow:
 1. A **Run** record is created (`state: queued`)
 2. `executeRun()` processes steps sequentially from `stepPointer`
 
+**Idempotency guard:** `trigger()` checks for an existing `queued|running` run for the same workflow + application before creating a new one. Duplicate events are silently skipped.
+
 | Step type | Behaviour |
 |---|---|
-| `sendEmail` | Sends via nodemailer; increments `metrics.emails_sent` |
+| `sendEmail` | Sends via nodemailer; increments `metrics.emails_sent`; Ethereal preview URL appended to step log when available |
 | `sendSMS` | Mock: logs to console + AuditLog; increments `metrics.sms_sent` |
 | `wait` | Schedules Agenda `resume-run` job; sets run `state: paused`; returns |
 | `webhook` | HTTP POST with 4-attempt exponential backoff (0 → 1s → 2s → 4s) on 5xx; each retry increments `metrics.steps_retried` |
