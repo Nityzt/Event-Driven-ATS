@@ -19,5 +19,9 @@ export const runsAPI = {
 
   cancel: async (id) => {
     return await apiClient.post(`/runs/${id}/cancel`);
+  },
+
+  trigger: async (workflowId, applicationId) => {
+    return await apiClient.post('/runs', { workflowId, applicationId });
   }
 };

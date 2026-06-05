@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Run = require('../models/Run');
 const Workflow = require('../models/Workflow');
+const Application = require('../models/Application');
 const AuditLog = require('../models/AuditLog');
 const { authenticate, authorize } = require('../middleware/auth');
 const { executeRun } = require('../services/workflowEngine');
 const agenda = require('../config/agenda');
+const metrics = require('../services/metrics');
 
 // GET /api/runs — list runs (filter by workflowId, applicationId, state)
 router.get('/', authenticate, async (req, res) => {
@@ -155,6 +157,59 @@ router.post('/:id/cancel', authenticate, authorize('Recruiter', 'Admin'), async 
     });
 
     res.json({ success: true, data: { state: run.state } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/runs — manually trigger a workflow run for an application
+router.post('/', authenticate, authorize('Recruiter', 'Admin'), async (req, res) => {
+  try {
+    const { workflowId, applicationId } = req.body;
+
+    const workflow = await Workflow.findById(workflowId);
+    if (!workflow || !workflow.enabled) {
+      return res.status(404).json({ success: false, error: 'Workflow not found or disabled' });
+    }
+
+    const application = await Application.findById(applicationId)
+      .populate('candidateId', 'name email phone skills')
+      .populate('jobId', 'title location seniority status');
+    if (!application) {
+      return res.status(404).json({ success: false, error: 'Application not found' });
+    }
+
+    const context = {
+      candidate: application.candidateId,
+      job: application.jobId,
+      application
+    };
+
+    const run = await Run.create({
+      workflowId,
+      applicationId,
+      state: 'queued',
+      correlationId: req.correlationId
+    });
+
+    metrics.runs_started++;
+
+    await AuditLog.create({
+      user: req.user._id,
+      action: 'WORKFLOW_TRIGGER',
+      resource: 'Run',
+      resourceId: run._id,
+      changes: { before: null, after: { workflowId, applicationId } },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      correlationId: req.correlationId || run.correlationId
+    });
+
+    executeRun(run._id.toString(), workflow, context).catch(err =>
+      console.error('[Runs] Error in manual trigger:', err)
+    );
+
+    res.status(201).json({ success: true, data: run });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
