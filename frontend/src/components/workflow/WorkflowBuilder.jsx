@@ -11,13 +11,24 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Modal from '../ui/Modal';
 
+const normalizeWorkflow = (wf) => {
+  if (!wf) return { name: '', triggers: [], steps: [], enabled: true };
+  return {
+    ...wf,
+    steps: (wf.steps || []).map((s) => {
+      const id = s.id || s._id?.toString() || `step_${Math.random().toString(36).slice(2)}`;
+      const config = { ...s.config };
+      // sendEmail steps seeded/saved with config.body — map to config.message for the form
+      if (s.type === 'sendEmail' && config.body && !config.message) {
+        config.message = config.body;
+      }
+      return { ...s, id, config };
+    }),
+  };
+};
+
 const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = null }) => {
-  const [workflow, setWorkflow] = useState(existingWorkflow || {
-    name: '',
-    triggers: [],
-    steps: [],
-    enabled: true,
-  });
+  const [workflow, setWorkflow] = useState(() => normalizeWorkflow(existingWorkflow));
 
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
