@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Briefcase, Users, FileText, Target, ArrowRight, Activity, Workflow, Shield } from 'lucide-react';
+import { Briefcase, Users, FileText, Target, ArrowRight, Activity, Workflow, Shield, Play, Mail, MessageSquare, RefreshCw } from 'lucide-react';
 import { jobsAPI, candidatesAPI, applicationsAPI, workflowsAPI } from '../api';
 import Card from '../components/ui/Card';
 import Badge, { stageToBadgeVariant } from '../components/ui/Badge';
@@ -65,6 +65,7 @@ const Dashboard = () => {
   const [recentApplications, setRecentApplications] = useState([]);
   const [stageDist, setStageDist]               = useState({});
   const [loading, setLoading]                   = useState(true);
+  const [metrics, setMetrics]                   = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -97,6 +98,18 @@ const Dashboard = () => {
         setLoading(false);
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    const metricsBase = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '');
+    const fetchMetrics = () =>
+      fetch(`${metricsBase}/metrics`)
+        .then(r => r.json())
+        .then(body => { if (body?.success) setMetrics(body.data); })
+        .catch(() => {});
+    fetchMetrics();
+    const id = setInterval(fetchMetrics, 30_000);
+    return () => clearInterval(id);
   }, []);
 
   const statCards = [
@@ -195,6 +208,40 @@ const Dashboard = () => {
           </div>
         </Card>
       )}
+
+      {/* ── System Activity ───────────────────────────────────────────────── */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-zinc-800">System Activity</h2>
+          <span className="flex items-center gap-1.5 text-xs text-zinc-400">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
+            Live
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { key: 'runs_started',  label: 'Runs Started',   icon: Play,          color: 'bg-brand-50 text-brand-600'   },
+            { key: 'emails_sent',   label: 'Emails Sent',    icon: Mail,          color: 'bg-green-50 text-green-600'   },
+            { key: 'sms_sent',      label: 'SMS Sent',       icon: MessageSquare, color: 'bg-purple-50 text-purple-600' },
+            { key: 'steps_retried', label: 'Steps Retried',  icon: RefreshCw,     color: 'bg-amber-50 text-amber-600'   },
+          ].map(({ key, label, icon: Icon, color }) => (
+            <div key={key} className="flex flex-col items-center justify-center gap-2 rounded-xl bg-zinc-50 border border-zinc-100 py-4 px-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <p className="text-2xl font-bold text-zinc-900 tabular-nums leading-none">
+                {metrics ? (metrics[key] ?? 0).toLocaleString() : '—'}
+              </p>
+              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest text-center">
+                {label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* ── Main grid ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
