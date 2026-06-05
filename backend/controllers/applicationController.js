@@ -1,35 +1,34 @@
 const Application = require('../models/Application');
 const Candidate = require('../models/Candidate');
 const Job = require('../models/Job');
+const Run = require('../models/Run');
 const AuditLog = require('../models/AuditLog');
 const workflowEngine = require('../services/workflowEngine');
 const eventEmitter = require('../services/eventEmitter');
 
-// @desc    Get all applications
-// @route   GET /api/applications
-// @access  Private
+function logAudit({ user, action, resource, resourceId, changes, req }) {
+  return AuditLog.create({
+    user,
+    action,
+    resource,
+    resourceId,
+    changes,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    correlationId: req.correlationId
+  });
+}
+
 exports.getApplications = async (req, res) => {
   try {
     const { jobId, candidateId, stage, page = 1, limit = 10 } = req.query;
-    
-    const query = {};
-    
-    // Filter by job
-    if (jobId) {
-      query.jobId = jobId;
-    }
-    
-    // Filter by candidate
-    if (candidateId) {
-      query.candidateId = candidateId;
-    }
-    
-    // Filter by stage
-    if (stage) {
-      query.stage = stage;
-    }
-    
-    // Pagination
+
+    const query = {
+      ...(jobId       && { jobId }),
+      ...(candidateId && { candidateId }),
+      ...(stage       && { stage }),
+    };
+
     const skip = (page - 1) * limit;
     
     const applications = await Application.find(query)
@@ -63,9 +62,6 @@ exports.getApplications = async (req, res) => {
   }
 };
 
-// @desc    Get single application with timeline
-// @route   GET /api/applications/:id
-// @access  Private
 exports.getApplication = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id)
@@ -94,9 +90,6 @@ exports.getApplication = async (req, res) => {
   }
 };
 
-// @desc    Get application timeline
-// @route   GET /api/applications/:id/timeline
-// @access  Private
 exports.getApplicationTimeline = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id)
@@ -112,8 +105,6 @@ exports.getApplicationTimeline = async (req, res) => {
       });
     }
     
-    // Also get workflow runs for this application
-    const Run = require('../models/Run');
     const runs = await Run.find({ applicationId: application._id })
       .populate('workflowId', 'name')
       .select('workflowId state logs createdAt updatedAt')
@@ -142,9 +133,6 @@ exports.getApplicationTimeline = async (req, res) => {
   }
 };
 
-// @desc    Create new application (triggers workflows!)
-// @route   POST /api/applications
-// @access  Private (Recruiter, Admin)
 exports.createApplication = async (req, res) => {
   try {
     const { candidateId, jobId, stage, notes } = req.body;
@@ -199,23 +187,10 @@ exports.createApplication = async (req, res) => {
     });
     await candidate.save();
     
-    // Audit log
-    await AuditLog.create({
-      user: req.user._id,
-      action: 'CREATE',
-      resource: 'Application',
-      resourceId: application._id,
-      changes: { after: application },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      correlationId: req.correlationId
-    });
-    
-    // Populate before sending response
+    await logAudit({ user: req.user._id, action: 'CREATE', resource: 'Application', resourceId: application._id, changes: { after: application }, req });
+
     await application.populate('candidateId', 'name email');
     await application.populate('jobId', 'title location');
-    
-    console.log(`✅ Application created: ${application._id}`);
 
     res.status(201).json({
       success: true,
@@ -248,9 +223,6 @@ exports.createApplication = async (req, res) => {
   }
 };
 
-// @desc    Update application stage
-// @route   PATCH /api/applications/:id
-// @access  Private (Recruiter, Admin)
 exports.updateApplication = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id);
@@ -263,45 +235,18 @@ exports.updateApplication = async (req, res) => {
     }
     
     const { stage, notes } = req.body;
-    
-    // Store old state
     const oldStage = application.stage;
-    
-    // Update stage
+
     if (stage && stage !== oldStage) {
       application.stage = stage;
-      
-      // Add to timeline
-      application.timeline.push({
-        stage,
-        changedBy: req.user._id
-      });
-      
-      console.log(`📊 Stage changed from "${oldStage}" to "${stage}"`);
-      console.log(`🎯 This will trigger "Stage.changed" workflows`);
+      application.timeline.push({ stage, changedBy: req.user._id });
     }
-    
-    // Update notes
-    if (notes !== undefined) {
-      application.notes = notes;
-    }
+
+    if (notes !== undefined) application.notes = notes;
     
     await application.save();
     
-    // Audit log
-    await AuditLog.create({
-      user: req.user._id,
-      action: 'UPDATE',
-      resource: 'Application',
-      resourceId: application._id,
-      changes: { 
-        before: { stage: oldStage }, 
-        after: { stage: application.stage } 
-      },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      correlationId: req.correlationId
-    });
+    await logAudit({ user: req.user._id, action: 'UPDATE', resource: 'Application', resourceId: application._id, changes: { before: { stage: oldStage }, after: { stage: application.stage } }, req });
     
     await application.populate('candidateId', 'name email');
     await application.populate('jobId', 'title location');
@@ -337,9 +282,6 @@ exports.updateApplication = async (req, res) => {
   }
 };
 
-// @desc    Delete application
-// @route   DELETE /api/applications/:id
-// @access  Private (Admin only)
 exports.deleteApplication = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id);
@@ -355,17 +297,7 @@ exports.deleteApplication = async (req, res) => {
     
     await application.deleteOne();
     
-    // Audit log
-    await AuditLog.create({
-      user: req.user._id,
-      action: 'DELETE',
-      resource: 'Application',
-      resourceId: application._id,
-      changes: { before: deletedData },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      correlationId: req.correlationId
-    });
+    await logAudit({ user: req.user._id, action: 'DELETE', resource: 'Application', resourceId: application._id, changes: { before: deletedData }, req });
     
     res.json({
       success: true,

@@ -2,34 +2,29 @@ const Job = require('../models/Job');
 const AuditLog = require('../models/AuditLog');
 const eventEmitter = require('../services/eventEmitter');
 
-// @desc    Get all jobs
-// @route   GET /api/jobs
-// @access  Private
+function logAudit({ user, action, resource, resourceId, changes, req }) {
+  return AuditLog.create({
+    user,
+    action,
+    resource,
+    resourceId,
+    changes,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    correlationId: req.correlationId
+  });
+}
+
 exports.getJobs = async (req, res) => {
   try {
     const { search, status, location, seniority, page = 1, limit = 10, cursor } = req.query;
-    
-    const query = {};
-    
-    // Text search
-    if (search) {
-      query.$text = { $search: search };
-    }
-    
-    // Filter by status
-    if (status) {
-      query.status = status;
-    }
-    
-    // Filter by location
-    if (location) {
-      query.location = new RegExp(location, 'i'); // Case-insensitive
-    }
-    
-    // Filter by seniority
-    if (seniority) {
-      query.seniority = seniority;
-    }
+
+    const query = {
+      ...(search   && { $text: { $search: search } }),
+      ...(status   && { status }),
+      ...(location && { location: new RegExp(location, 'i') }),
+      ...(seniority && { seniority }),
+    };
     
     const countQuery = { ...query };
     const limitVal = parseInt(limit);
@@ -101,9 +96,6 @@ exports.getJobs = async (req, res) => {
   }
 };
 
-// @desc    Get single job
-// @route   GET /api/jobs/:id
-// @access  Private
 exports.getJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id)
@@ -130,23 +122,10 @@ exports.getJob = async (req, res) => {
   }
 };
 
-// @desc    Create new job
-// @route   POST /api/jobs
-// @access  Private (Recruiter, Admin)
 exports.createJob = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      requiredSkills,
-      operationalSkills,
-      hygieneSkills,
-      location,
-      seniority,
-      status
-    } = req.body;
-    
-    // Create job
+    const { title, description, requiredSkills, operationalSkills, hygieneSkills, location, seniority, status } = req.body;
+
     const job = await Job.create({
       title,
       description,
@@ -159,18 +138,8 @@ exports.createJob = async (req, res) => {
       postedBy: req.user._id
     });
     
-    // Audit log
-    await AuditLog.create({
-      user: req.user._id,
-      action: 'CREATE',
-      resource: 'Job',
-      resourceId: job._id,
-      changes: { after: job },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      correlationId: req.correlationId
-    });
-    
+    await logAudit({ user: req.user._id, action: 'CREATE', resource: 'Job', resourceId: job._id, changes: { after: job }, req });
+
     res.status(201).json({
       success: true,
       data: job
@@ -185,35 +154,14 @@ exports.createJob = async (req, res) => {
   }
 };
 
-// @desc    Update job
-// @route   PATCH /api/jobs/:id
-// @access  Private (Recruiter, Admin)
 exports.updateJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
-    
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        error: 'Job not found'
-      });
-    }
-    
-    // Store old state for audit
+    if (!job) return res.status(404).json({ success: false, error: 'Job not found' });
+
     const oldState = job.toObject();
-    
-    // Update fields
-    const {
-      title,
-      description,
-      requiredSkills,
-      operationalSkills,
-      hygieneSkills,
-      location,
-      seniority,
-      status
-    } = req.body;
-    
+    const { title, description, requiredSkills, operationalSkills, hygieneSkills, location, seniority, status } = req.body;
+
     if (title !== undefined) job.title = title;
     if (description !== undefined) job.description = description;
     if (requiredSkills !== undefined) job.requiredSkills = requiredSkills;
@@ -222,23 +170,9 @@ exports.updateJob = async (req, res) => {
     if (location !== undefined) job.location = location;
     if (seniority !== undefined) job.seniority = seniority;
     if (status !== undefined) job.status = status;
-    
-    await job.save();
 
-    // Audit log
-    await AuditLog.create({
-      user: req.user._id,
-      action: 'UPDATE',
-      resource: 'Job',
-      resourceId: job._id,
-      changes: {
-        before: oldState,
-        after: job.toObject()
-      },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      correlationId: req.correlationId
-    });
+    await job.save();
+    await logAudit({ user: req.user._id, action: 'UPDATE', resource: 'Job', resourceId: job._id, changes: { before: oldState, after: job.toObject() }, req });
 
     res.json({
       success: true,
@@ -256,13 +190,10 @@ exports.updateJob = async (req, res) => {
   }
 };
 
-// @desc    Delete job
-// @route   DELETE /api/jobs/:id
-// @access  Private (Admin only)
 exports.deleteJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
-    
+
     if (!job) {
       return res.status(404).json({
         success: false,
@@ -270,22 +201,9 @@ exports.deleteJob = async (req, res) => {
       });
     }
     
-    // Store for audit
     const deletedData = job.toObject();
-    
     await job.deleteOne();
-    
-    // Audit log
-    await AuditLog.create({
-      user: req.user._id,
-      action: 'DELETE',
-      resource: 'Job',
-      resourceId: job._id,
-      changes: { before: deletedData },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      correlationId: req.correlationId
-    });
+    await logAudit({ user: req.user._id, action: 'DELETE', resource: 'Job', resourceId: job._id, changes: { before: deletedData }, req });
     
     res.json({
       success: true,
