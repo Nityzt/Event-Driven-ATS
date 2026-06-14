@@ -1,4 +1,4 @@
-# TalentFlow — Event-Driven ATS
+# TalentBay — Event-Driven ATS
 
 A full-stack Applicant Tracking System built on the MERN stack, featuring a custom event-driven workflow automation engine with real-time Server-Sent Events, MongoDB-backed job scheduling via Agenda, JWT/RBAC authentication, a visual workflow builder, and a polished production-ready UI with a custom design system.
 
@@ -234,7 +234,7 @@ Create `backend/.env` (copy from `.env.example`):
 | `EMAIL_PORT` | `587` | SMTP port |
 | `EMAIL_USER` | *(Ethereal / SMTP user)* | SMTP username or `resend` for Resend |
 | `EMAIL_PASS` | *(Ethereal / SMTP pass)* | SMTP password or API key |
-| `EMAIL_FROM` | `TalentFlow ATS <noreply@...>` | From address on sent emails |
+| `EMAIL_FROM` | `TalentBay ATS <noreply@...>` | From address on sent emails |
 | `TWILIO_ACCOUNT_SID` | *(optional)* | Twilio Account SID — leave blank for SMS mock |
 | `TWILIO_AUTH_TOKEN` | *(optional)* | Twilio Auth Token |
 | `TWILIO_FROM_NUMBER` | *(optional)* | Twilio phone number, e.g. `+15551234567` |
@@ -549,7 +549,7 @@ To change `JWT_SECRET` for Docker: set it in a `.env` file at the project root (
    EMAIL_PORT=587
    EMAIL_USER=resend
    EMAIL_PASS=re_xxxxxxxxxxxxxxxxxxxx
-   EMAIL_FROM=TalentFlow <onboarding@resend.dev>
+   EMAIL_FROM=TalentBay <onboarding@resend.dev>
    ```
    `onboarding@resend.dev` works in Resend test-mode without domain verification — emails go to the **Resend dashboard** for inspection. For real delivery to any inbox, verify a custom domain in the Resend console and update `EMAIL_FROM`.
 
@@ -563,7 +563,7 @@ To change `JWT_SECRET` for Docker: set it in a `.env` file at the project root (
    EMAIL_PORT=587
    EMAIL_USER=you@gmail.com
    EMAIL_PASS=xxxx-xxxx-xxxx-xxxx
-   EMAIL_FROM=TalentFlow <you@gmail.com>
+   EMAIL_FROM=TalentBay <you@gmail.com>
    ```
 
 ### Email — Ethereal (default, demo-only)
@@ -622,8 +622,8 @@ Recommended stack: **MongoDB Atlas** (database) + **Render** (backend) + **Verce
    - `JWT_REFRESH_SECRET` — generate another one
    - `NODE_ENV=production`
    - Email and Twilio vars (optional)
-   - `FRONTEND_URL` — set after Step 3 (e.g. `https://talentflow.vercel.app`)
-5. Click **Deploy** — Render gives you a URL like `https://talentflow-api.onrender.com`
+   - `FRONTEND_URL` — set after Step 3 (e.g. `https://talentbay.vercel.app`)
+5. Click **Deploy** — Render gives you a URL like `https://talentbay-api.onrender.com`
 
 > **Note:** Free Render services spin down after 15 minutes of inactivity. First request after idle takes ~30 seconds to cold-start. Acceptable for a demo; upgrade to the $7/month plan to keep it warm.
 
@@ -633,9 +633,9 @@ Recommended stack: **MongoDB Atlas** (database) + **Render** (backend) + **Verce
 2. Set:
    - **Root directory**: `frontend`
    - **Framework preset**: Vite
-   - **Environment variable**: `VITE_API_URL=https://talentflow-api.onrender.com/api`
-3. Click **Deploy** — Vercel gives you a URL like `https://talentflow.vercel.app`
-4. Go back to Render → update `FRONTEND_URL=https://talentflow.vercel.app` → redeploy backend
+   - **Environment variable**: `VITE_API_URL=https://talentbay-api.onrender.com/api`
+3. Click **Deploy** — Vercel gives you a URL like `https://talentbay.vercel.app`
+4. Go back to Render → update `FRONTEND_URL=https://talentbay.vercel.app` → redeploy backend
 
 ### Step 4 — Seed the production database
 
@@ -650,8 +650,8 @@ Or SSH into the Render instance via the **Shell** tab in the Render dashboard an
 
 | URL | What |
 |---|---|
-| `https://talentflow.vercel.app` | Frontend (React SPA) |
-| `https://talentflow-api.onrender.com/healthz` | Backend health check |
-| `https://talentflow-api.onrender.com/metrics` | Live counters |
+| `https://talentbay.vercel.app` | Frontend (React SPA) |
+| `https://talentbay-api.onrender.com/healthz` | Backend health check |
+| `https://talentbay-api.onrender.com/metrics` | Live counters |
 
 ---
