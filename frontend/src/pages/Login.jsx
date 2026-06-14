@@ -67,26 +67,32 @@ const Login = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left brand panel */}
-      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-brand-600 to-brand-900 flex-col justify-between p-12 text-white">
-        <div>
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+      <div className="hidden lg:flex lg:w-5/12 relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-brand-950 flex-col justify-between p-12 text-white">
+        {/* Soft layered glow for calm depth */}
+        <div
+          className="absolute inset-0 opacity-60 pointer-events-none"
+          style={{ background: 'radial-gradient(900px circle at 15% 0%, rgba(255,255,255,0.10), transparent 45%)' }}
+          aria-hidden="true"
+        />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-14">
+            <div className="w-10 h-10 rounded-xl bg-white/15 ring-1 ring-white/20 flex items-center justify-center">
               <span className="text-xl font-bold">T</span>
             </div>
-            <span className="text-xl font-bold">TalentFlow</span>
+            <span className="text-xl font-semibold tracking-tight">TalentFlow</span>
           </div>
 
-          <h2 className="text-4xl font-bold leading-tight mb-4">
-            Recruitment<br />reimagined.
+          <h2 className="text-5xl font-semibold leading-[1.05] tracking-tightest mb-5">
+            Recruitment,<br />made calm.
           </h2>
-          <p className="text-brand-200 text-lg leading-relaxed mb-10">
+          <p className="text-brand-100/90 text-lg leading-relaxed mb-10 max-w-sm">
             The event-driven ATS built for modern recruiting teams who demand speed, automation, and insight.
           </p>
 
           <div className="space-y-4">
             {features.map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-white/10 ring-1 ring-white/15 flex items-center justify-center flex-shrink-0">
                   <Icon className="w-4 h-4" />
                 </div>
                 <span className="text-brand-100 text-sm">{text}</span>
@@ -95,8 +101,8 @@ const Login = () => {
           </div>
         </div>
 
-        <p className="text-brand-300 text-sm">
-          "Built for teams who move fast and hire smart."
+        <p className="relative text-brand-200/80 text-sm">
+          “Built for teams who move fast and hire smart.”
         </p>
       </div>
 
@@ -108,13 +114,13 @@ const Login = () => {
             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">T</span>
             </div>
-            <span className="font-bold text-zinc-900">TalentFlow</span>
+            <span className="font-bold text-stone-900">TalentFlow</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-zinc-900 mb-1">
+          <h1 className="text-2xl font-bold text-stone-900 mb-1">
             {isRegistering ? 'Create your account' : 'Welcome back'}
           </h1>
-          <p className="text-zinc-500 text-sm mb-8">
+          <p className="text-stone-500 text-sm mb-8">
             {isRegistering
               ? 'Start managing your recruitment pipeline today'
               : 'Sign in to access your recruitment dashboard'}
@@ -184,7 +190,7 @@ const Login = () => {
             </Button>
           </form>
 
-          <p className="text-center mt-6 text-sm text-zinc-500">
+          <p className="text-center mt-6 text-sm text-stone-500">
             {isRegistering ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               type="button"
@@ -196,9 +202,9 @@ const Login = () => {
           </p>
 
           {!isRegistering && (
-            <div className="mt-6 pt-6 border-t border-zinc-100 text-center">
-              <p className="text-xs text-zinc-400">Demo credentials</p>
-              <p className="text-xs text-zinc-500 mt-1">admin@ats.com / admin123</p>
+            <div className="mt-6 pt-6 border-t border-stone-100 text-center">
+              <p className="text-xs text-stone-400">Demo credentials</p>
+              <p className="text-xs text-stone-500 mt-1">admin@ats.com / admin123</p>
             </div>
           )}
         </div>
