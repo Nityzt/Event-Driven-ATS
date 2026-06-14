@@ -11,7 +11,7 @@ export default function Card({ as: Tag = 'div', padding = 'md', hover, className
   return (
     <Tag
       className={cn(
-        'bg-white rounded-xl border border-zinc-200 shadow-card',
+        'bg-white rounded-2xl border border-stone-200/80 shadow-card',
         hover && 'transition-shadow duration-200 hover:shadow-card-hover cursor-pointer',
         paddings[padding],
         className,

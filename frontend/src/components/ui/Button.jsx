@@ -5,8 +5,8 @@ import Spinner from './Spinner';
 const variants = {
   primary:   'bg-brand-600 text-white hover:bg-brand-700 focus-visible:ring-brand-500 shadow-sm',
   secondary: 'bg-brand-50 text-brand-700 hover:bg-brand-100 focus-visible:ring-brand-500',
-  outline:   'border border-zinc-300 text-zinc-700 hover:bg-zinc-50 focus-visible:ring-zinc-400',
-  ghost:     'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:ring-zinc-400',
+  outline:   'border border-stone-300 text-stone-700 hover:bg-stone-50 focus-visible:ring-stone-400',
+  ghost:     'text-stone-600 hover:bg-stone-100 hover:text-stone-900 focus-visible:ring-stone-400',
   danger:    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-sm',
 };
 
@@ -26,10 +26,10 @@ const Button = forwardRef(function Button(
       disabled={disabled || loading}
       aria-disabled={disabled || loading}
       className={cn(
-        'inline-flex items-center justify-center font-medium rounded-lg',
-        'transition-colors duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-        'disabled:opacity-50 disabled:pointer-events-none',
+        'inline-flex items-center justify-center font-medium rounded-xl',
+        'transition-[background-color,transform] duration-150 active:scale-[0.98]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-muted',
+        'disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100',
         variants[variant],
         sizes[size],
         className,
