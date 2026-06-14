@@ -114,15 +114,15 @@ const Workflows = () => {
       />
 
       {/* Tab bar */}
-      <div className="inline-flex bg-zinc-100 rounded-xl p-1 gap-1">
+      <div className="inline-flex bg-stone-100 rounded-xl p-1 gap-1">
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 ${
               tab === t.key
-                ? 'bg-white text-zinc-900 shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-700'
+                ? 'bg-white text-stone-900 shadow-sm'
+                : 'text-stone-500 hover:text-stone-700'
             }`}
           >
             {t.label}
@@ -179,7 +179,7 @@ const WorkflowCard = ({ workflow, confirmDelete, onToggle, onEdit, onDeleteInten
     <div className="flex items-start justify-between mb-3">
       <div className="flex-1 min-w-0 pr-3">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <h3 className="text-sm font-semibold text-zinc-900">{workflow.name}</h3>
+          <h3 className="text-sm font-semibold text-stone-900">{workflow.name}</h3>
           <Badge variant={workflow.enabled ? 'success' : 'default'} size="sm">
             {workflow.enabled ? 'Active' : 'Inactive'}
           </Badge>
@@ -191,7 +191,7 @@ const WorkflowCard = ({ workflow, confirmDelete, onToggle, onEdit, onDeleteInten
             ))}
           </div>
         )}
-        <p className="text-xs text-zinc-400">{workflow.steps?.length || 0} step{workflow.steps?.length !== 1 ? 's' : ''}</p>
+        <p className="text-xs text-stone-400">{workflow.steps?.length || 0} step{workflow.steps?.length !== 1 ? 's' : ''}</p>
       </div>
       <div className="flex items-center gap-0.5 flex-shrink-0">
         <button
@@ -201,8 +201,8 @@ const WorkflowCard = ({ workflow, confirmDelete, onToggle, onEdit, onDeleteInten
         >
           {workflow.enabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </button>
-        <button onClick={onEdit} aria-label="Edit workflow" className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors">
-          <Edit2 className="w-3.5 h-3.5 text-zinc-500" />
+        <button onClick={onEdit} aria-label="Edit workflow" className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors">
+          <Edit2 className="w-3.5 h-3.5 text-stone-500" />
         </button>
         <button onClick={onDeleteIntent} aria-label="Delete workflow" className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
           <Trash2 className="w-3.5 h-3.5 text-red-500" />
@@ -211,16 +211,16 @@ const WorkflowCard = ({ workflow, confirmDelete, onToggle, onEdit, onDeleteInten
     </div>
 
     {workflow.steps?.length > 0 && (
-      <div className="border-t border-zinc-100 pt-3 mt-3">
+      <div className="border-t border-stone-100 pt-3 mt-3">
         <div className="space-y-1">
           {workflow.steps.slice(0, 3).map((step, i) => (
-            <div key={i} className="text-xs text-zinc-500 flex items-center gap-2">
-              <span className="w-4 h-4 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center text-2xs font-semibold flex-shrink-0">{i + 1}</span>
+            <div key={i} className="text-xs text-stone-500 flex items-center gap-2">
+              <span className="w-4 h-4 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center text-2xs font-semibold flex-shrink-0">{i + 1}</span>
               <span className="capitalize">{step.type.replace(/([A-Z])/g, ' $1').trim()}</span>
             </div>
           ))}
           {workflow.steps.length > 3 && (
-            <p className="text-xs text-zinc-400 pl-6">+{workflow.steps.length - 3} more</p>
+            <p className="text-xs text-stone-400 pl-6">+{workflow.steps.length - 3} more</p>
           )}
         </div>
       </div>
@@ -228,11 +228,11 @@ const WorkflowCard = ({ workflow, confirmDelete, onToggle, onEdit, onDeleteInten
 
     {confirmDelete && (
       <div className="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center gap-3 p-4">
-        <div className="flex items-center gap-2 text-zinc-700">
+        <div className="flex items-center gap-2 text-stone-700">
           <AlertTriangle className="w-5 h-5 text-amber-500" />
           <span className="text-sm font-medium">Delete this workflow?</span>
         </div>
-        <p className="text-xs text-zinc-500 text-center">All runs for this workflow will also be removed.</p>
+        <p className="text-xs text-stone-500 text-center">All runs for this workflow will also be removed.</p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onDeleteCancel}>Cancel</Button>
           <Button variant="danger" size="sm" onClick={onDeleteConfirm}>Delete</Button>
@@ -260,27 +260,27 @@ const RunsTable = ({ runs, onAction, hasRole }) => {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-zinc-50 border-b border-zinc-200">
-              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Workflow</th>
-              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">State</th>
-              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Progress</th>
-              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Started</th>
-              {canControl && <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Actions</th>}
+            <tr className="bg-stone-50 border-b border-stone-200">
+              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Workflow</th>
+              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">State</th>
+              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Progress</th>
+              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Started</th>
+              {canControl && <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-stone-100">
             {runs.map(run => (
-              <tr key={run._id} className="hover:bg-zinc-50 transition-colors">
-                <td className="px-5 py-3.5 font-medium text-zinc-800">
+              <tr key={run._id} className="hover:bg-stone-50 transition-colors">
+                <td className="px-5 py-3.5 font-medium text-stone-800">
                   {run.workflowId?.name || '—'}
                 </td>
                 <td className="px-5 py-3.5">
                   <Badge variant={stateToBadgeVariant(run.state)} size="sm">{run.state}</Badge>
                 </td>
-                <td className="px-5 py-3.5 text-zinc-500 text-xs">
+                <td className="px-5 py-3.5 text-stone-500 text-xs">
                   Step {run.stepPointer} / {run.workflowId?.steps?.length || '?'}
                 </td>
-                <td className="px-5 py-3.5 text-zinc-400 text-xs">
+                <td className="px-5 py-3.5 text-stone-400 text-xs">
                   {run.startedAt ? new Date(run.startedAt).toLocaleString() : '—'}
                 </td>
                 {canControl && (

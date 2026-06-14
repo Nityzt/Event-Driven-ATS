@@ -103,7 +103,7 @@ const WorkflowTrigger = ({ triggers, onAdd, onRemove }) => {
         <button
           onClick={handleAdd}
           disabled={!selectedTrigger || (selectedTrigger === 'Stage.changed' && !selectedStage)}
-          className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:bg-zinc-400 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:bg-stone-400 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add

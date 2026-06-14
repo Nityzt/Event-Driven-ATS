@@ -86,11 +86,11 @@ const TriggerModal = ({ app, onClose, onTriggered }) => {
               className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                 selected === w._id
                   ? 'border-brand-500 bg-brand-50'
-                  : 'border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
+                  : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
               }`}
             >
-              <p className="text-sm font-medium text-zinc-800">{w.name}</p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-sm font-medium text-stone-800">{w.name}</p>
+              <p className="text-xs text-stone-500">
                 {w.steps?.length || 0} step{w.steps?.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -161,15 +161,15 @@ const Applications = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Candidate</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Position</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Stage</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Applied</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Actions</th>
+              <tr className="bg-stone-50 border-b border-stone-200">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Candidate</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Position</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Stage</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Applied</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-stone-100">
               {loading ? (
                 <TableRowSkeleton rows={6} />
               ) : applications.length === 0 ? (
@@ -184,19 +184,19 @@ const Applications = () => {
                 </tr>
               ) : (
                 applications.map(app => (
-                  <tr key={app._id} className="hover:bg-zinc-50 transition-colors">
+                  <tr key={app._id} className="hover:bg-stone-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 text-xs font-semibold flex-shrink-0">
                           {(app.candidate?.name || '?').charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-zinc-800">{app.candidate?.name || 'Unknown'}</p>
-                          <p className="text-xs text-zinc-400">{app.candidate?.email}</p>
+                          <p className="text-sm font-medium text-stone-800">{app.candidate?.name || 'Unknown'}</p>
+                          <p className="text-xs text-stone-400">{app.candidate?.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-zinc-700">{app.job?.title || 'Unknown'}</td>
+                    <td className="px-6 py-4 text-sm text-stone-700">{app.job?.title || 'Unknown'}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>
@@ -204,13 +204,13 @@ const Applications = () => {
                           value={app.stage}
                           onChange={e => handleStageChange(app._id, e.target.value)}
                           aria-label="Change application stage"
-                          className="text-xs border border-zinc-200 rounded-md px-2 py-1 bg-white text-zinc-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                          className="text-xs border border-stone-200 rounded-md px-2 py-1 bg-white text-stone-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         >
                           {STAGES.map(s => <option key={s}>{s}</option>)}
                         </select>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-zinc-500">
+                    <td className="px-6 py-4 text-sm text-stone-500">
                       {new Date(app.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">

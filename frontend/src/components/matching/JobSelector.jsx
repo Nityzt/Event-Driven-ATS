@@ -31,7 +31,7 @@ const JobSelector = ({ selectedJob, onSelect }) => {
 
   if (!jobs.length) {
     return (
-      <div className="p-6 text-center text-sm text-zinc-400">No jobs available</div>
+      <div className="p-6 text-center text-sm text-stone-400">No jobs available</div>
     );
   }
 
@@ -40,14 +40,14 @@ const JobSelector = ({ selectedJob, onSelect }) => {
   );
 
   return (
-    <div className="divide-y divide-zinc-100">
+    <div className="divide-y divide-stone-100">
       <div className="p-2">
         <input
           type="text"
           placeholder="Search jobs…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white"
+          className="w-full px-3 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white"
         />
       </div>
       {filteredJobs.map(job => (
@@ -57,11 +57,11 @@ const JobSelector = ({ selectedJob, onSelect }) => {
           className={`w-full text-left p-4 transition-colors ${
             selectedJob?._id === job._id
               ? 'bg-brand-50 border-l-2 border-brand-600'
-              : 'hover:bg-zinc-50 border-l-2 border-transparent'
+              : 'hover:bg-stone-50 border-l-2 border-transparent'
           }`}
         >
-          <p className="text-sm font-semibold text-zinc-800 mb-1">{job.title}</p>
-          <div className="space-y-0.5 text-xs text-zinc-500">
+          <p className="text-sm font-semibold text-stone-800 mb-1">{job.title}</p>
+          <div className="space-y-0.5 text-xs text-stone-500">
             {job.location && (
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3 h-3" />
@@ -78,12 +78,12 @@ const JobSelector = ({ selectedJob, onSelect }) => {
           {job.requiredSkills?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {job.requiredSkills.slice(0, 3).map((skill, idx) => (
-                <span key={idx} className="px-1.5 py-0.5 bg-zinc-100 text-zinc-600 rounded text-xs">
+                <span key={idx} className="px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded text-xs">
                   {skill}
                 </span>
               ))}
               {job.requiredSkills.length > 3 && (
-                <span className="text-zinc-400 text-xs">+{job.requiredSkills.length - 3}</span>
+                <span className="text-stone-400 text-xs">+{job.requiredSkills.length - 3}</span>
               )}
             </div>
           )}
@@ -102,7 +102,7 @@ const JobSelector = ({ selectedJob, onSelect }) => {
         </button>
       ))}
       {filteredJobs.length === 0 && search && (
-        <div className="p-6 text-center text-sm text-zinc-400">No jobs match.</div>
+        <div className="p-6 text-center text-sm text-stone-400">No jobs match.</div>
       )}
     </div>
   );

@@ -17,7 +17,7 @@ const TimelineEvent = ({ event, isLast }) => {
         case 'workflow.paused':
           return <PauseCircle className="w-5 h-5 text-amber-500" />;
         default:
-          return <AlertCircle className="w-5 h-5 text-zinc-500" />;
+          return <AlertCircle className="w-5 h-5 text-stone-500" />;
       }
     }
 
@@ -35,7 +35,7 @@ const TimelineEvent = ({ event, isLast }) => {
       case 'webhook.called':
         return <Webhook className="w-5 h-5 text-orange-600" />;
       default:
-        return <AlertCircle className="w-5 h-5 text-zinc-400" />;
+        return <AlertCircle className="w-5 h-5 text-stone-400" />;
     }
   };
 
@@ -88,7 +88,7 @@ const TimelineEvent = ({ event, isLast }) => {
       paused:    'bg-amber-100 text-amber-700',
     };
     return (
-      <span className={`px-2 py-0.5 rounded text-xs font-medium ${classes[status] || 'bg-zinc-100 text-zinc-600'}`}>
+      <span className={`px-2 py-0.5 rounded text-xs font-medium ${classes[status] || 'bg-stone-100 text-stone-600'}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
@@ -97,17 +97,17 @@ const TimelineEvent = ({ event, isLast }) => {
   return (
     <div className="flex gap-3">
       <div className="flex flex-col items-center">
-        <div className="w-9 h-9 rounded-full bg-white border border-zinc-200 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-white border border-stone-200 flex items-center justify-center flex-shrink-0">
           {getEventIcon()}
         </div>
-        {!isLast && <div className="w-px flex-1 bg-zinc-200 mt-2" style={{ minHeight: 32 }} />}
+        {!isLast && <div className="w-px flex-1 bg-stone-200 mt-2" style={{ minHeight: 32 }} />}
       </div>
 
       <div className={`flex-1 pb-5 ${isLast ? '' : ''}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-0.5">
-              <p className="text-sm font-semibold text-zinc-800">{getEventTitle()}</p>
+              <p className="text-sm font-semibold text-stone-800">{getEventTitle()}</p>
               {getStatusBadge()}
             </div>
             {(() => {
@@ -115,12 +115,12 @@ const TimelineEvent = ({ event, isLast }) => {
               if (!desc) return null;
               const previewIdx = desc.indexOf('Preview: ');
               if (previewIdx === -1) {
-                return <p className="text-xs text-zinc-500 mb-1">{desc}</p>;
+                return <p className="text-xs text-stone-500 mb-1">{desc}</p>;
               }
               const textPart = desc.slice(0, previewIdx).trim();
               const urlPart = desc.slice(previewIdx + 'Preview: '.length).trim();
               return (
-                <p className="text-xs text-zinc-500 mb-1">
+                <p className="text-xs text-stone-500 mb-1">
                   {textPart && <>{textPart}{' '}</>}
                   <a
                     href={urlPart}
@@ -134,7 +134,7 @@ const TimelineEvent = ({ event, isLast }) => {
               );
             })()}
             {event.metadata && (
-              <pre className="text-xs text-zinc-500 bg-zinc-50 rounded p-2 mt-1 overflow-x-auto whitespace-pre-wrap">
+              <pre className="text-xs text-stone-500 bg-stone-50 rounded p-2 mt-1 overflow-x-auto whitespace-pre-wrap">
                 {JSON.stringify(event.metadata, null, 2)}
               </pre>
             )}
@@ -142,7 +142,7 @@ const TimelineEvent = ({ event, isLast }) => {
               <p className="text-xs text-orange-600 mt-1">Retry attempt {event.retryCount}</p>
             )}
           </div>
-          <span className="text-xs text-zinc-400 flex-shrink-0">
+          <span className="text-xs text-stone-400 flex-shrink-0">
             {formatTimestamp(event.timestamp || event.createdAt)}
           </span>
         </div>

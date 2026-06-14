@@ -54,8 +54,8 @@ const Profile = () => {
             {initial}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-zinc-900">{user?.name}</h2>
-            <p className="text-sm text-zinc-500 mb-1">{user?.email}</p>
+            <h2 className="text-lg font-semibold text-stone-900">{user?.name}</h2>
+            <p className="text-sm text-stone-500 mb-1">{user?.email}</p>
             <Badge variant={ROLE_VARIANT[user?.role] || 'default'}>
               <Shield className="w-3 h-3" />
               {user?.role}
@@ -63,19 +63,19 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-zinc-100">
-          <div className="flex items-center gap-2.5 p-3 rounded-lg bg-zinc-50">
-            <User className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-stone-100">
+          <div className="flex items-center gap-2.5 p-3 rounded-lg bg-stone-50">
+            <User className="w-4 h-4 text-stone-400 flex-shrink-0" />
             <div>
-              <p className="text-2xs text-zinc-400 uppercase tracking-wide font-semibold">Name</p>
-              <p className="text-sm text-zinc-800 font-medium">{user?.name}</p>
+              <p className="text-2xs text-stone-400 uppercase tracking-wide font-semibold">Name</p>
+              <p className="text-sm text-stone-800 font-medium">{user?.name}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 p-3 rounded-lg bg-zinc-50">
-            <Mail className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+          <div className="flex items-center gap-2.5 p-3 rounded-lg bg-stone-50">
+            <Mail className="w-4 h-4 text-stone-400 flex-shrink-0" />
             <div>
-              <p className="text-2xs text-zinc-400 uppercase tracking-wide font-semibold">Email</p>
-              <p className="text-sm text-zinc-800 font-medium truncate">{user?.email}</p>
+              <p className="text-2xs text-stone-400 uppercase tracking-wide font-semibold">Email</p>
+              <p className="text-sm text-stone-800 font-medium truncate">{user?.email}</p>
             </div>
           </div>
         </div>
@@ -83,8 +83,8 @@ const Profile = () => {
 
       {/* Change Password */}
       <Card>
-        <h3 className="text-base font-semibold text-zinc-900 flex items-center gap-2 mb-5">
-          <Lock className="w-4 h-4 text-zinc-500" />
+        <h3 className="text-base font-semibold text-stone-900 flex items-center gap-2 mb-5">
+          <Lock className="w-4 h-4 text-stone-500" />
           Change Password
         </h3>
         <form onSubmit={handlePasswordChange} className="space-y-4">

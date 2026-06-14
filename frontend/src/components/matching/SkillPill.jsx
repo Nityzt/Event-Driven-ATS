@@ -6,7 +6,7 @@ export const SkillPill = ({ skill, type }) => {
   };
 
   return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${styles[type] || 'bg-zinc-100 text-zinc-700 border-zinc-200'}`}>
+    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${styles[type] || 'bg-stone-100 text-stone-700 border-stone-200'}`}>
       {skill}
     </span>
   );

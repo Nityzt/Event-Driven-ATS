@@ -1,7 +1,7 @@
 import { cn } from '../../lib/utils';
 
 const variants = {
-  default: 'bg-zinc-100 text-zinc-600 border border-zinc-200',
+  default: 'bg-stone-100 text-stone-600 border border-stone-200',
   success: 'bg-green-50 text-green-700 border border-green-200',
   warning: 'bg-amber-50 text-amber-700 border border-amber-200',
   danger:  'bg-red-50 text-red-700 border border-red-200',
@@ -11,7 +11,7 @@ const variants = {
 };
 
 const dotColors = {
-  default: 'bg-zinc-400',
+  default: 'bg-stone-400',
   success: 'bg-green-500',
   warning: 'bg-amber-500',
   danger:  'bg-red-500',

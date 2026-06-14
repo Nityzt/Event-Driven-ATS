@@ -24,9 +24,9 @@ class ErrorBoundary extends React.Component {
               <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
-              <h1 className="text-lg font-semibold text-zinc-900">Something went wrong</h1>
+              <h1 className="text-lg font-semibold text-stone-900">Something went wrong</h1>
             </div>
-            <p className="text-sm text-zinc-500 mb-6">
+            <p className="text-sm text-stone-500 mb-6">
               An unexpected error occurred. Try refreshing the page — if the problem persists, contact support.
             </p>
             <button

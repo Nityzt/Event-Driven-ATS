@@ -22,7 +22,7 @@ const CandidateList = ({ matches }) => {
         const score = match.overallScore ?? match.score ?? 0;
 
         return (
-          <div key={match._id} className="bg-white rounded-xl border border-zinc-200 shadow-card overflow-hidden">
+          <div key={match._id} className="bg-white rounded-xl border border-stone-200 shadow-card overflow-hidden">
             <div className="p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -31,14 +31,14 @@ const CandidateList = ({ matches }) => {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-zinc-900">{candidate.name}</p>
+                      <p className="text-sm font-semibold text-stone-900">{candidate.name}</p>
                       {match.matchQuality && (
                         <Badge variant={QUALITY_VARIANT[match.matchQuality] || 'default'} size="sm">
                           {match.matchQuality}
                         </Badge>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 mt-0.5 text-xs text-zinc-500">
+                    <div className="flex flex-wrap items-center gap-3 mt-0.5 text-xs text-stone-500">
                       {candidate.email && (
                         <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{candidate.email}</span>
                       )}
@@ -61,7 +61,7 @@ const CandidateList = ({ matches }) => {
               <div className="space-y-2">
                 {match.matchedSkills?.required?.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-zinc-500 mb-1">Required Skills</p>
+                    <p className="text-xs font-medium text-stone-500 mb-1">Required Skills</p>
                     <div className="flex flex-wrap gap-1.5">
                       {match.matchedSkills.required.map((skill, idx) => (
                         <SkillPill key={idx} skill={skill} type="required" />
@@ -71,7 +71,7 @@ const CandidateList = ({ matches }) => {
                 )}
                 {match.matchedSkills?.operational?.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-zinc-500 mb-1">Operational Skills</p>
+                    <p className="text-xs font-medium text-stone-500 mb-1">Operational Skills</p>
                     <div className="flex flex-wrap gap-1.5">
                       {match.matchedSkills.operational.map((skill, idx) => (
                         <SkillPill key={idx} skill={skill} type="operational" />
@@ -81,7 +81,7 @@ const CandidateList = ({ matches }) => {
                 )}
                 {match.matchedSkills?.hygiene?.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-zinc-500 mb-1">
+                    <p className="text-xs font-medium text-stone-500 mb-1">
                       Hygiene Skills <span className="text-green-600">(+5% each)</span>
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -105,17 +105,17 @@ const CandidateList = ({ matches }) => {
             </div>
 
             {isExpanded && (
-              <div className="border-t border-zinc-100 p-4 bg-zinc-50 space-y-3">
+              <div className="border-t border-stone-100 p-4 bg-stone-50 space-y-3">
                 {candidate.experience?.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold text-zinc-700 mb-2">Experience</p>
+                    <p className="text-xs font-semibold text-stone-700 mb-2">Experience</p>
                     <div className="space-y-2">
                       {candidate.experience.map((exp, idx) => (
                         <div key={idx} className="text-xs">
-                          <p className="font-medium text-zinc-800">{exp.title}</p>
-                          <p className="text-zinc-500">{exp.company}</p>
+                          <p className="font-medium text-stone-800">{exp.title}</p>
+                          <p className="text-stone-500">{exp.company}</p>
                           {exp.duration && (
-                            <p className="text-zinc-400 flex items-center gap-1 mt-0.5">
+                            <p className="text-stone-400 flex items-center gap-1 mt-0.5">
                               <Calendar className="w-3 h-3" />{exp.duration}
                             </p>
                           )}
@@ -127,10 +127,10 @@ const CandidateList = ({ matches }) => {
 
                 {candidate.skills?.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold text-zinc-700 mb-2">All Skills</p>
+                    <p className="text-xs font-semibold text-stone-700 mb-2">All Skills</p>
                     <div className="flex flex-wrap gap-1.5">
                       {candidate.skills.map((skill, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-zinc-200 text-zinc-600 rounded-full text-xs">
+                        <span key={idx} className="px-2 py-0.5 bg-stone-200 text-stone-600 rounded-full text-xs">
                           {skill}
                         </span>
                       ))}
@@ -140,7 +140,7 @@ const CandidateList = ({ matches }) => {
 
                 {(match.missingSkills?.required?.length > 0 || match.missingSkills?.operational?.length > 0) && (
                   <div>
-                    <p className="text-xs font-semibold text-zinc-700 mb-2">Missing Skills</p>
+                    <p className="text-xs font-semibold text-stone-700 mb-2">Missing Skills</p>
                     <div className="flex flex-wrap gap-1.5">
                       {[...(match.missingSkills.required || []), ...(match.missingSkills.operational || [])].map((skill, idx) => (
                         <span key={idx} className="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs line-through">
@@ -152,35 +152,35 @@ const CandidateList = ({ matches }) => {
                 )}
 
                 <div>
-                  <p className="text-xs font-semibold text-zinc-700 mb-2">Score Breakdown</p>
+                  <p className="text-xs font-semibold text-stone-700 mb-2">Score Breakdown</p>
                   <div className="space-y-1 text-xs">
                     {match.breakdown && (
                       <>
-                        <div className="flex justify-between text-zinc-600">
+                        <div className="flex justify-between text-stone-600">
                           <span>Skills (50%)</span>
                           <span>{Math.round(match.breakdown.skillsScore)}%</span>
                         </div>
-                        <div className="flex justify-between text-zinc-600">
+                        <div className="flex justify-between text-stone-600">
                           <span>Experience (30%)</span>
                           <span>{Math.round(match.breakdown.experienceScore)}%</span>
                         </div>
-                        <div className="flex justify-between text-zinc-600">
+                        <div className="flex justify-between text-stone-600">
                           <span>Location (10%)</span>
                           <span>{Math.round(match.breakdown.locationScore)}%</span>
                         </div>
-                        <div className="flex justify-between text-zinc-600">
+                        <div className="flex justify-between text-stone-600">
                           <span>Education (10%)</span>
                           <span>{Math.round(match.breakdown.educationScore)}%</span>
                         </div>
                       </>
                     )}
                     {match.matchedSkills?.hygiene?.length > 0 && (
-                      <div className="flex justify-between text-zinc-600">
+                      <div className="flex justify-between text-stone-600">
                         <span>Hygiene Bonus</span>
                         <span className="text-green-600">+{match.matchedSkills.hygiene.length * 5}%</span>
                       </div>
                     )}
-                    <div className="flex justify-between border-t border-zinc-200 pt-1 mt-1 font-semibold text-zinc-800">
+                    <div className="flex justify-between border-t border-stone-200 pt-1 mt-1 font-semibold text-stone-800">
                       <span>Overall</span>
                       <span className="text-brand-600">{Math.round(score)}%</span>
                     </div>

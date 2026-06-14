@@ -116,15 +116,15 @@ const AuditLogs = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Timestamp</th>
-                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Action</th>
-                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Resource</th>
-                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">User</th>
-                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Ref ID</th>
+              <tr className="bg-stone-50 border-b border-stone-200">
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Timestamp</th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Action</th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Resource</th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">User</th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Ref ID</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-stone-100">
               {loading ? (
                 <TableRowSkeleton rows={6} />
               ) : filtered.length === 0 ? (
@@ -142,20 +142,20 @@ const AuditLogs = () => {
                   <>
                     <tr
                       key={log._id}
-                      className="hover:bg-zinc-50 cursor-pointer transition-colors"
+                      className="hover:bg-stone-50 cursor-pointer transition-colors"
                       onClick={() => setExpandedLog(expandedLog === log._id ? null : log._id)}
                     >
-                      <td className="px-5 py-3.5 text-zinc-500 whitespace-nowrap text-xs">
+                      <td className="px-5 py-3.5 text-stone-500 whitespace-nowrap text-xs">
                         {new Date(log.createdAt).toLocaleString()}
                       </td>
                       <td className="px-5 py-3.5">
                         <Badge variant={actionToVariant(log.action)} size="sm">{log.action}</Badge>
                       </td>
-                      <td className="px-5 py-3.5 text-zinc-700">{log.resource || '—'}</td>
-                      <td className="px-5 py-3.5 text-zinc-600 text-xs">
+                      <td className="px-5 py-3.5 text-stone-700">{log.resource || '—'}</td>
+                      <td className="px-5 py-3.5 text-stone-600 text-xs">
                         {log.user?.name || log.user?.email || '—'}
                       </td>
-                      <td className="px-5 py-3.5 text-zinc-400 text-xs flex items-center gap-1">
+                      <td className="px-5 py-3.5 text-stone-400 text-xs flex items-center gap-1">
                         {log.correlationId ? `${log.correlationId.slice(0, 8)}…` : '—'}
                         {expandedLog === log._id
                           ? <ChevronUp className="w-3.5 h-3.5 ml-auto" />
@@ -164,27 +164,27 @@ const AuditLogs = () => {
                       </td>
                     </tr>
                     {expandedLog === log._id && (
-                      <tr key={`${log._id}-expand`} className="bg-zinc-50">
+                      <tr key={`${log._id}-expand`} className="bg-stone-50">
                         <td colSpan={5} className="px-5 py-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
                             {log.changes?.before && (
                               <div>
-                                <p className="font-semibold text-zinc-500 mb-1.5 font-sans">Before</p>
-                                <pre className="bg-white border border-zinc-200 rounded-lg p-3 overflow-x-auto text-zinc-600 text-xs leading-relaxed">
+                                <p className="font-semibold text-stone-500 mb-1.5 font-sans">Before</p>
+                                <pre className="bg-white border border-stone-200 rounded-lg p-3 overflow-x-auto text-stone-600 text-xs leading-relaxed">
                                   {JSON.stringify(log.changes.before, null, 2)}
                                 </pre>
                               </div>
                             )}
                             {log.changes?.after && (
                               <div>
-                                <p className="font-semibold text-zinc-500 mb-1.5 font-sans">After</p>
-                                <pre className="bg-white border border-zinc-200 rounded-lg p-3 overflow-x-auto text-zinc-600 text-xs leading-relaxed">
+                                <p className="font-semibold text-stone-500 mb-1.5 font-sans">After</p>
+                                <pre className="bg-white border border-stone-200 rounded-lg p-3 overflow-x-auto text-stone-600 text-xs leading-relaxed">
                                   {JSON.stringify(log.changes.after, null, 2)}
                                 </pre>
                               </div>
                             )}
                             {!log.changes?.before && !log.changes?.after && (
-                              <p className="text-zinc-400 font-sans">No change data recorded.</p>
+                              <p className="text-stone-400 font-sans">No change data recorded.</p>
                             )}
                           </div>
                         </td>
@@ -199,8 +199,8 @@ const AuditLogs = () => {
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-zinc-100">
-            <p className="text-xs text-zinc-500">
+          <div className="flex items-center justify-between px-5 py-4 border-t border-stone-100">
+            <p className="text-xs text-stone-500">
               Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
             </p>
             <div className="flex gap-2">

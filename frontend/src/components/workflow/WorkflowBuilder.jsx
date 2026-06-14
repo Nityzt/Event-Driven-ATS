@@ -136,7 +136,7 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="bg-white rounded-xl shadow-card p-6">
-        <h1 className="text-xl font-bold text-zinc-900 mb-6">
+        <h1 className="text-xl font-bold text-stone-900 mb-6">
           {existingWorkflow ? 'Edit Workflow' : 'New Workflow'}
         </h1>
 
@@ -153,14 +153,14 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
 
         {/* Triggers */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold text-zinc-800 mb-3">Triggers</h2>
+          <h2 className="text-base font-semibold text-stone-800 mb-3">Triggers</h2>
           <WorkflowTrigger triggers={workflow.triggers} onAdd={addTrigger} onRemove={removeTrigger} />
           {errors.triggers && <p className="text-red-500 text-sm mt-1">{errors.triggers}</p>}
         </div>
 
         {/* Steps */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold text-zinc-800 mb-3">Steps</h2>
+          <h2 className="text-base font-semibold text-stone-800 mb-3">Steps</h2>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={workflow.steps.map(s => s.id)} strategy={verticalListSortingStrategy}>
@@ -180,8 +180,8 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
           </DndContext>
 
           {workflow.steps.length === 0 && (
-            <div className="text-center py-8 bg-zinc-50 rounded-lg border-2 border-dashed border-zinc-200">
-              <p className="text-sm text-zinc-400">No steps added yet. Use the palette below to add steps.</p>
+            <div className="text-center py-8 bg-stone-50 rounded-lg border-2 border-dashed border-stone-200">
+              <p className="text-sm text-stone-400">No steps added yet. Use the palette below to add steps.</p>
             </div>
           )}
           {errors.steps && <p className="text-red-500 text-sm mt-1">{errors.steps}</p>}
@@ -191,15 +191,15 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
         <StepPalette onAddStep={addStep} />
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-zinc-200">
+        <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-stone-200">
           <label className="flex items-center gap-2 mr-auto cursor-pointer">
             <input
               type="checkbox"
               checked={workflow.enabled}
               onChange={(e) => setWorkflow({ ...workflow, enabled: e.target.checked })}
-              className="rounded border-zinc-300 text-brand-600 focus:ring-brand-500"
+              className="rounded border-stone-300 text-brand-600 focus:ring-brand-500"
             />
-            <span className="text-sm text-zinc-700">Enable workflow</span>
+            <span className="text-sm text-stone-700">Enable workflow</span>
           </label>
           {onCancel && (
             <Button variant="outline" onClick={onCancel}>Cancel</Button>
@@ -226,20 +226,20 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
         size="lg"
       >
         {previewData?.length === 0 ? (
-          <p className="text-sm text-zinc-400">No steps to preview.</p>
+          <p className="text-sm text-stone-400">No steps to preview.</p>
         ) : (
           <div className="space-y-4">
             {previewData?.map((step, i) => (
-              <div key={i} className="border border-zinc-200 rounded-lg p-4">
+              <div key={i} className="border border-stone-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-6 h-6 bg-brand-100 text-brand-700 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0">
                     {step.stepNumber}
                   </span>
-                  <span className="font-medium text-zinc-800 capitalize">
+                  <span className="font-medium text-stone-800 capitalize">
                     {step.type.replace(/([A-Z])/g, ' $1').trim()}
                   </span>
                 </div>
-                <pre className="bg-zinc-50 rounded p-3 text-xs font-mono text-zinc-700 whitespace-pre-wrap overflow-x-auto">
+                <pre className="bg-stone-50 rounded p-3 text-xs font-mono text-stone-700 whitespace-pre-wrap overflow-x-auto">
                   {JSON.stringify(step.resolvedConfig, null, 2)}
                 </pre>
               </div>
