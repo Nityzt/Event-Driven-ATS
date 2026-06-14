@@ -33,6 +33,7 @@
     "nodemailer": "^7.0.12",
     "pdf-parse": "^2.4.5",
     "pdf2json": "^4.0.2",
+    "twilio": "^6.0.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

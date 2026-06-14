@@ -38,11 +38,13 @@ async function processResumeUpload(file, existingSkills = []) {
 
 exports.getCandidates = async (req, res) => {
   try {
-    const { search, status, page = 1, limit = 10, cursor } = req.query;
+    const { search, status, location, seniority, page = 1, limit = 10, cursor } = req.query;
 
     const query = {
       ...(search && { $text: { $search: search } }),
       ...(status && { status }),
+      ...(location && { location }),
+      ...(seniority && { seniority }),
     };
 
     const countQuery = { ...query };
@@ -51,7 +53,8 @@ exports.getCandidates = async (req, res) => {
     let hasMore = false;
     let nextCursor = null;
 
-    if (cursor) {
+    // Cursor pagination is incompatible with $text search — fall back to offset when searching
+    if (cursor && !search) {
       const cursorDoc = await Candidate.findById(cursor);
       if (cursorDoc) {
         query.$or = [
@@ -59,7 +62,6 @@ exports.getCandidates = async (req, res) => {
           { createdAt: cursorDoc.createdAt, _id: { $lt: cursorDoc._id } }
         ];
       }
-
       candidates = await Candidate.find(query).sort({ createdAt: -1, _id: -1 }).limit(limitVal + 1);
     } else {
       const skip = (parseInt(page) - 1) * limitVal;

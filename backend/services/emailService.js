@@ -14,19 +14,20 @@ class EmailService {
     if (this.initialized) return;
 
     try {
-      if (process.env.NODE_ENV === 'production') {
-        // Production: Use real SMTP credentials from .env
+      if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        // Use configured SMTP (works for Ethereal, Resend, SendGrid, etc.)
         this.transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: process.env.SMTP_PORT || 587,
-          secure: process.env.SMTP_SECURE === 'true',
+          host: process.env.EMAIL_HOST,
+          port: parseInt(process.env.EMAIL_PORT) || 587,
+          secure: process.env.EMAIL_SECURE === 'true',
           auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
           },
         });
+        console.log('[Email] Using SMTP:', process.env.EMAIL_HOST, '/', process.env.EMAIL_USER);
       } else {
-        // Development: Use Ethereal test account
+        // Fallback: create a fresh Ethereal account
         const testAccount = await nodemailer.createTestAccount();
         this.transporter = nodemailer.createTransport({
           host: 'smtp.ethereal.email',
