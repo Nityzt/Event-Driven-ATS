@@ -31,7 +31,7 @@ A full-stack Applicant Tracking System built on the MERN stack, featuring a cust
 |---|---|
 | Frontend | React 18, Vite, Tailwind CSS 3, React Router v6, @dnd-kit (drag-and-drop) |
 | UI Library | Custom component library — Button, Input, Select, Card, Badge, Modal, Skeleton, EmptyState, Spinner, PageHeader |
-| Styling | Inter font, indigo design tokens (`brand.*`), Zinc neutrals, `cn()` via clsx + tailwind-merge |
+| Styling | Geist font, sage design tokens (`brand.*`), Stone (warm) neutrals, `cn()` via clsx + tailwind-merge |
 | Toasts | react-hot-toast (replaces all `alert()`/`confirm()` dialogs) |
 | Backend | Node.js 20, Express 5, Mongoose 9 |
 | Database | MongoDB 7 |
@@ -103,7 +103,7 @@ event-driven-ats/
 │   └── server.js
 ├── frontend/
 │   ├── public/
-│   │   └── favicon.svg        # Indigo "T" lettermark SVG
+│   │   └── favicon.svg        # Sage "T" lettermark SVG
 │   └── src/
 │       ├── api/               # axios wrapper per resource
 │       │   ├── client.js      # axios instance with auth interceptor (unwraps response.data)
@@ -230,10 +230,14 @@ Create `backend/.env` (copy from `.env.example`):
 | `JWT_REFRESH_SECRET` | *(required)* | Refresh token signing — different from above |
 | `JWT_EXPIRE` | `15m` | Access token lifetime |
 | `JWT_REFRESH_EXPIRE` | `7d` | Refresh token lifetime |
-| `EMAIL_HOST` | `smtp.ethereal.email` | SMTP host |
+| `EMAIL_HOST` | `smtp.ethereal.email` | SMTP host (leave blank to auto-create Ethereal account) |
 | `EMAIL_PORT` | `587` | SMTP port |
-| `EMAIL_USER` | *(Ethereal user)* | SMTP credentials |
-| `EMAIL_PASS` | *(Ethereal pass)* | SMTP credentials |
+| `EMAIL_USER` | *(Ethereal / SMTP user)* | SMTP username or `resend` for Resend |
+| `EMAIL_PASS` | *(Ethereal / SMTP pass)* | SMTP password or API key |
+| `EMAIL_FROM` | `TalentFlow ATS <noreply@...>` | From address on sent emails |
+| `TWILIO_ACCOUNT_SID` | *(optional)* | Twilio Account SID — leave blank for SMS mock |
+| `TWILIO_AUTH_TOKEN` | *(optional)* | Twilio Auth Token |
+| `TWILIO_FROM_NUMBER` | *(optional)* | Twilio phone number, e.g. `+15551234567` |
 | `FRONTEND_URL` | `http://localhost:5173` | CORS allowed origin |
 
 **Docker overrides** are set directly in `docker-compose.yml` and can be overridden by a `.env` file at the project root with `JWT_SECRET` and `JWT_REFRESH_SECRET`.
@@ -345,6 +349,64 @@ npm test            # watch mode
 
 **22 integration tests** cover: auth (register, login, validation, RBAC), workflow CRUD + toggle + preview, matching calculation, application creation, webhook retry behaviour, idempotency guard, input-validation 400s (jobs/candidates/applications), rate-limit enforcement, metrics endpoint, health endpoint.
 
+### Quick Smoke-Test Checklist (manual)
+
+Run these after `npm run seed` to verify everything end-to-end before a demo.
+
+```bash
+BASE=http://localhost:5001
+
+# 1. Health
+curl $BASE/healthz
+
+# 2. Metrics (counters start at 0)
+curl $BASE/metrics
+
+# 3. Login as Admin — save the token
+TOKEN=$(curl -s -X POST $BASE/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@ats.com","password":"admin123"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])")
+
+# 4. List jobs (should return 10)
+curl -s "$BASE/api/jobs" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print('Jobs:', d['data']['pagination']['total'])"
+
+# 5. List candidates (should return 50+)
+curl -s "$BASE/api/candidates" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print('Candidates:', d['data']['pagination']['total'])"
+
+# 6. Location filter (returns only Toronto candidates)
+curl -s "$BASE/api/candidates?location=Toronto" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print('Toronto:', d['data']['pagination']['total'])"
+
+# 7. List workflows (3 seed workflows)
+curl -s "$BASE/api/workflows" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print('Workflows:', len(d['data']))"
+
+# 8. Recalculate matches for first job
+JOB=$(curl -s "$BASE/api/jobs?limit=1" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['jobs'][0]['_id'])")
+curl -s -X POST "$BASE/api/matches/recalculate/job/$JOB" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print('Matches recalculated:', d['data']['count'])"
+
+# 9. Audit logs (should have entries)
+curl -s "$BASE/api/audit-logs" -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print('Audit entries:', d['data']['total'])"
+
+# 10. Webhook echo endpoint
+curl -s -X POST $BASE/webhook/echo \
+  -H "Content-Type: application/json" \
+  -d '{"test":"payload"}' | python3 -m json.tool
+
+# 11. Rate limiting (11th auth request → 429)
+for i in {1..11}; do
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST $BASE/api/auth/login \
+    -H "Content-Type: application/json" -d '{"email":"x","password":"y"}')
+  echo "Attempt $i: $STATUS"
+done
+```
+
 ---
 
 ## Matching Engine Details
@@ -382,7 +444,7 @@ For each matching enabled Workflow:
 | Step type | Behaviour |
 |---|---|
 | `sendEmail` | Sends via nodemailer; increments `metrics.emails_sent`; Ethereal preview URL appended to step log when available |
-| `sendSMS` | Mock: logs to console + AuditLog; increments `metrics.sms_sent` |
+| `sendSMS` | Sends via Twilio when `TWILIO_*` env vars are set; otherwise logs to console + AuditLog; increments `metrics.sms_sent` |
 | `wait` | Schedules Agenda `resume-run` job; sets run `state: paused`; returns |
 | `webhook` | HTTP POST with 4-attempt exponential backoff (0 → 1s → 2s → 4s) on 5xx; each retry increments `metrics.steps_retried` |
 
@@ -396,14 +458,18 @@ Each step emits an SSE event on `run:log:<applicationId>` so the frontend timeli
 
 The frontend uses a custom design system built entirely with Tailwind CSS — no third-party component library.
 
+The visual language is **"Refined Calm"** — a light, airy off-white canvas, a single muted-sage accent, warm neutrals, rounded cards, and mono tabular figures for data.
+
 ### Tokens
 | Token | Value | Usage |
 |---|---|---|
-| `brand.600` | `#4f46e5` | Primary buttons, active nav, links |
-| `brand.50–950` | indigo scale | Badge backgrounds, hover states |
+| `brand.600` | `#3d6347` (sage) | Primary buttons, active nav, links |
+| `brand.50–950` | muted sage scale | Badge backgrounds, hover states |
 | `surface.DEFAULT` | `#ffffff` | Card backgrounds |
-| `surface.muted` | `#f4f4f5` | Page background, skeleton base |
-| Font | Inter (Google Fonts) | All text |
+| `surface.muted` | `#f4f3ee` (warm off-white) | Page background |
+| Neutrals | Tailwind `stone` (warm gray) | Text, borders, surfaces |
+| Font (sans) | Geist (Google Fonts) | All UI text |
+| Font (mono) | Geist Mono | Tabular stat figures |
 
 ### Components (`src/components/ui/`)
 - **Button** — variants: `primary` `secondary` `outline` `ghost` `danger`; loading spinner; `leftIcon`/`rightIcon` slots
@@ -468,3 +534,124 @@ This clears the database and populates 50 candidates, 10 jobs, 3 sample workflow
 - **frontend** — multi-stage build (Node 20 → nginx:alpine); `VITE_API_URL=/api` baked at build time; nginx proxies `/api/` → backend:5001, with SSE buffering disabled on `/api/applications/` (depends on backend healthy).
 
 To change `JWT_SECRET` for Docker: set it in a `.env` file at the project root (docker-compose reads it automatically).
+
+---
+
+## Real Services Setup (Email & SMS)
+
+### Email — Resend (free, 3 000 emails/month)
+
+1. Sign up at **resend.com** (GitHub login works instantly)
+2. Go to **API Keys** → Create key with `Sending access`
+3. Update `backend/.env`:
+   ```
+   EMAIL_HOST=smtp.resend.com
+   EMAIL_PORT=587
+   EMAIL_USER=resend
+   EMAIL_PASS=re_xxxxxxxxxxxxxxxxxxxx
+   EMAIL_FROM=TalentFlow <onboarding@resend.dev>
+   ```
+   `onboarding@resend.dev` works in Resend test-mode without domain verification — emails go to the **Resend dashboard** for inspection. For real delivery to any inbox, verify a custom domain in the Resend console and update `EMAIL_FROM`.
+
+### Email — Gmail App Password (personal demo)
+
+1. Enable 2-Step Verification on your Google account
+2. Go to **Google Account → Security → App passwords** → create one for "Mail"
+3. Update `backend/.env`:
+   ```
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_USER=you@gmail.com
+   EMAIL_PASS=xxxx-xxxx-xxxx-xxxx
+   EMAIL_FROM=TalentFlow <you@gmail.com>
+   ```
+
+### Email — Ethereal (default, demo-only)
+
+No signup needed. Leave `EMAIL_HOST` / `EMAIL_USER` / `EMAIL_PASS` set to the Ethereal values in `.env` (or blank — the service auto-creates an account). Every sent email gets a **preview URL** in the backend logs and the workflow run's step log. Click it to see the email in a browser — perfect for demos.
+
+### SMS — Twilio (free trial, ~100 SMS)
+
+1. Sign up at **twilio.com/try-twilio** (no credit card for trial)
+2. From the **Console Dashboard**, copy:
+   - Account SID
+   - Auth Token
+3. Go to **Phone Numbers → Get a trial number**
+4. Update `backend/.env`:
+   ```
+   TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   TWILIO_AUTH_TOKEN=your_auth_token_here
+   TWILIO_FROM_NUMBER=+1xxxxxxxxxx
+   ```
+5. **Trial restriction**: SMS can only be delivered to numbers you verify in the Twilio console (under **Verified Caller IDs**). Add your mobile number there.
+6. Restart the backend — it will log `[SMS] Twilio client initialised` on startup.
+
+### SMS — Mock (default)
+
+Leave the `TWILIO_*` variables blank. Every SMS step logs the payload to the console and creates an `SMS_SENT` AuditLog entry — fully visible in the Audit Logs page of the UI.
+
+---
+
+## Deployment (Free Tier)
+
+Recommended stack: **MongoDB Atlas** (database) + **Render** (backend) + **Vercel** (frontend).
+
+### Step 1 — MongoDB Atlas
+
+1. Sign up at **cloud.mongodb.com**
+2. Create a **free M0 cluster** (512 MB, shared, no credit card)
+3. Under **Database Access** → add a user with `readWriteAnyDatabase`
+4. Under **Network Access** → add `0.0.0.0/0` (allow all — fine for demo)
+5. Click **Connect → Drivers** → copy the connection string:
+   ```
+   mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/event-ats?retryWrites=true&w=majority
+   ```
+
+### Step 2 — Backend on Render
+
+1. Push your repo to GitHub
+2. Go to **dashboard.render.com** → New → **Web Service**
+3. Connect the repo, set:
+   - **Root directory**: `backend`
+   - **Build command**: `npm install`
+   - **Start command**: `node server.js`
+   - **Instance type**: Free
+4. Under **Environment**, add all variables from `backend/.env.example`:
+   - `MONGO_URI` — your Atlas connection string
+   - `JWT_SECRET` — generate: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
+   - `JWT_REFRESH_SECRET` — generate another one
+   - `NODE_ENV=production`
+   - Email and Twilio vars (optional)
+   - `FRONTEND_URL` — set after Step 3 (e.g. `https://talentflow.vercel.app`)
+5. Click **Deploy** — Render gives you a URL like `https://talentflow-api.onrender.com`
+
+> **Note:** Free Render services spin down after 15 minutes of inactivity. First request after idle takes ~30 seconds to cold-start. Acceptable for a demo; upgrade to the $7/month plan to keep it warm.
+
+### Step 3 — Frontend on Vercel
+
+1. Go to **vercel.com** → New Project → import your repo
+2. Set:
+   - **Root directory**: `frontend`
+   - **Framework preset**: Vite
+   - **Environment variable**: `VITE_API_URL=https://talentflow-api.onrender.com/api`
+3. Click **Deploy** — Vercel gives you a URL like `https://talentflow.vercel.app`
+4. Go back to Render → update `FRONTEND_URL=https://talentflow.vercel.app` → redeploy backend
+
+### Step 4 — Seed the production database
+
+```bash
+# From your local machine, with the production MONGO_URI set:
+MONGO_URI="mongodb+srv://..." node scripts/seed.js
+```
+
+Or SSH into the Render instance via the **Shell** tab in the Render dashboard and run `node scripts/seed.js`.
+
+### Production URLs
+
+| URL | What |
+|---|---|
+| `https://talentflow.vercel.app` | Frontend (React SPA) |
+| `https://talentflow-api.onrender.com/healthz` | Backend health check |
+| `https://talentflow-api.onrender.com/metrics` | Live counters |
+
+---
