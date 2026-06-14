@@ -53,7 +53,7 @@ export const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             <span className="text-white font-bold text-base leading-none">T</span>
           </div>
           <div>
-            <p className="text-stone-900 font-semibold text-base leading-tight tracking-tight">TalentFlow</p>
+            <p className="text-stone-900 font-semibold text-base leading-tight tracking-tight">TalentBay</p>
             <p className="text-stone-400 text-2xs font-medium uppercase tracking-widest leading-tight">Recruitment OS</p>
           </div>
         </div>

@@ -126,8 +126,8 @@ const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, o
   <Card className="relative">
     <div className="flex items-start justify-between mb-3">
       <div className="flex-1 min-w-0 pr-3">
-        <h3 className="text-base font-semibold text-zinc-900 truncate">{job.title}</h3>
-        <div className="flex items-center flex-wrap gap-3 text-xs text-zinc-500 mt-1">
+        <h3 className="text-base font-semibold text-stone-900 truncate">{job.title}</h3>
+        <div className="flex items-center flex-wrap gap-3 text-xs text-stone-500 mt-1">
           {job.location && (
             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.location}</span>
           )}
@@ -141,16 +141,16 @@ const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, o
         <button
           onClick={onTimeline}
           aria-label="View timeline"
-          className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors ml-1"
+          className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors ml-1"
         >
-          <Clock className="w-3.5 h-3.5 text-zinc-500" />
+          <Clock className="w-3.5 h-3.5 text-stone-500" />
         </button>
         <button
           onClick={onEdit}
           aria-label="Edit job"
-          className="p-1.5 hover:bg-zinc-100 rounded-lg transition-colors"
+          className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors"
         >
-          <Edit2 className="w-3.5 h-3.5 text-zinc-500" />
+          <Edit2 className="w-3.5 h-3.5 text-stone-500" />
         </button>
         <button
           onClick={onDeleteIntent}
@@ -163,18 +163,18 @@ const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, o
     </div>
 
     {job.description && (
-      <p className="text-sm text-zinc-500 line-clamp-2 mb-3">{job.description}</p>
+      <p className="text-sm text-stone-500 line-clamp-2 mb-3">{job.description}</p>
     )}
 
     {job.requiredSkills?.length > 0 && (
       <div className="mb-2">
-        <p className="text-2xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Required</p>
+        <p className="text-2xs font-semibold text-stone-400 uppercase tracking-wide mb-1.5">Required</p>
         <div className="flex flex-wrap gap-1.5">
           {job.requiredSkills.slice(0, 6).map((skill, i) => (
             <Badge key={i} variant="danger" size="sm">{skill}</Badge>
           ))}
           {job.requiredSkills.length > 6 && (
-            <span className="text-xs text-zinc-400">+{job.requiredSkills.length - 6}</span>
+            <span className="text-xs text-stone-400">+{job.requiredSkills.length - 6}</span>
           )}
         </div>
       </div>
@@ -182,13 +182,13 @@ const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, o
 
     {job.operationalSkills?.length > 0 && (
       <div className="mb-2">
-        <p className="text-2xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Operational</p>
+        <p className="text-2xs font-semibold text-stone-400 uppercase tracking-wide mb-1.5">Operational</p>
         <div className="flex flex-wrap gap-1.5">
           {job.operationalSkills.slice(0, 3).map((skill, i) => (
             <Badge key={i} variant="info" size="sm">{skill}</Badge>
           ))}
           {job.operationalSkills.length > 3 && (
-            <span className="text-xs text-zinc-400">+{job.operationalSkills.length - 3}</span>
+            <span className="text-xs text-stone-400">+{job.operationalSkills.length - 3}</span>
           )}
         </div>
       </div>
@@ -196,7 +196,7 @@ const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, o
 
     {job.hygieneSkills?.length > 0 && (
       <div>
-        <p className="text-2xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Hygiene (+5% each)</p>
+        <p className="text-2xs font-semibold text-stone-400 uppercase tracking-wide mb-1.5">Hygiene (+5% each)</p>
         <div className="flex flex-wrap gap-1.5">
           {job.hygieneSkills.slice(0, 4).map((skill, i) => (
             <Badge key={i} variant="success" size="sm">{skill}</Badge>
@@ -207,11 +207,11 @@ const JobCard = ({ job, confirmDelete, onEdit, onDeleteIntent, onDeleteCancel, o
 
     {confirmDelete && (
       <div className="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center gap-3 p-4">
-        <div className="flex items-center gap-2 text-zinc-700">
+        <div className="flex items-center gap-2 text-stone-700">
           <AlertTriangle className="w-5 h-5 text-amber-500" />
           <span className="text-sm font-medium">Delete this job?</span>
         </div>
-        <p className="text-xs text-zinc-500 text-center">This cannot be undone.</p>
+        <p className="text-xs text-stone-500 text-center">This cannot be undone.</p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onDeleteCancel}>Cancel</Button>
           <Button variant="danger" size="sm" onClick={onDeleteConfirm}>Delete</Button>
@@ -287,12 +287,12 @@ const JobModal = ({ open, job, onClose, onSuccess }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Job Title *" value={formData.title} onChange={set('title')} placeholder="Senior Frontend Engineer" required />
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1.5">Description</label>
+          <label className="block text-sm font-medium text-stone-700 mb-1.5">Description</label>
           <textarea
             rows={4}
             value={formData.description}
             onChange={set('description')}
-            className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors resize-none"
+            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors resize-none"
             placeholder="Describe the role, responsibilities, and requirements…"
           />
         </div>
@@ -366,7 +366,7 @@ const JobTimelineModal = ({ job, onClose }) => {
           {applications.map(app => (
             <div key={app._id}>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-medium text-zinc-800">
+                <span className="text-sm font-medium text-stone-800">
                   {app.candidateId?.name || app.candidate?.name || 'Unknown Candidate'}
                 </span>
                 <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>

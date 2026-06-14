@@ -79,7 +79,7 @@ const Login = () => {
             <div className="w-10 h-10 rounded-xl bg-white/15 ring-1 ring-white/20 flex items-center justify-center">
               <span className="text-xl font-bold">T</span>
             </div>
-            <span className="text-xl font-semibold tracking-tight">TalentFlow</span>
+            <span className="text-xl font-semibold tracking-tight">TalentBay</span>
           </div>
 
           <h2 className="text-5xl font-semibold leading-[1.05] tracking-tightest mb-5">
@@ -114,7 +114,7 @@ const Login = () => {
             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">T</span>
             </div>
-            <span className="font-bold text-stone-900">TalentFlow</span>
+            <span className="font-bold text-stone-900">TalentBay</span>
           </div>
 
           <h1 className="text-2xl font-bold text-stone-900 mb-1">

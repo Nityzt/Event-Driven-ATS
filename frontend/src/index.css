@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --color-brand: 99 102 241;
+  --color-brand: 79 124 89;        /* sage 500 — used for selection + accents */
   --sidebar-width: 256px;
   --navbar-height: 64px;
 }
@@ -14,18 +14,29 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body {
+  background-color: #f4f3ee;       /* warm off-white canvas */
+  color: #1c1917;                  /* warm ink (stone-900) */
+}
+
+/* Tabular, mono figures give data a calm, precise rhythm. */
+.tabular-nums {
+  font-feature-settings: 'tnum' 1;
+}
+
 ::selection {
-  background-color: rgb(var(--color-brand) / 0.15);
-  color: #312e81;
+  background-color: rgb(var(--color-brand) / 0.18);
+  color: #243529;
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #a1a1aa transparent;
+  scrollbar-color: #c4c0b6 transparent;
 }
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #a1a1aa; border-radius: 2px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #c4c0b6; border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
 
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
@@ -33,7 +44,7 @@ html {
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%);
+  background: linear-gradient(90deg, #efede7 25%, #e2dfd6 50%, #efede7 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

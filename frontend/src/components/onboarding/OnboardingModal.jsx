@@ -76,7 +76,7 @@ export default function OnboardingModal() {
       <div className="w-20 h-20 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-6 shadow-lg">
         <span className="text-4xl font-bold text-white">T</span>
       </div>
-      <h2 className="text-2xl font-bold text-stone-900 mb-3">Welcome to TalentFlow</h2>
+      <h2 className="text-2xl font-bold text-stone-900 mb-3">Welcome to TalentBay</h2>
       <p className="text-stone-500 text-base leading-relaxed max-w-sm mx-auto">
         Your AI-powered recruitment command centre. Let's take a quick look at what you can do.
       </p>
@@ -202,7 +202,7 @@ export default function OnboardingModal() {
       </div>
       <h2 className="text-2xl font-bold text-stone-900 mb-2">You're all set!</h2>
       <p className="text-stone-500 text-sm leading-relaxed max-w-xs mx-auto mb-6">
-        TalentFlow is ready to transform your recruitment workflow. Head to the dashboard to get started.
+        TalentBay is ready to transform your recruitment workflow. Head to the dashboard to get started.
       </p>
       <Button variant="primary" size="lg" onClick={complete} rightIcon={<ArrowRight className="w-4 h-4" />}>
         Go to Dashboard

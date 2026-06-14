@@ -1,13 +1,19 @@
 // src/components/upload/ResumeUploader.jsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, FileText, X, AlertCircle, CheckCircle } from 'lucide-react';
 
 const ResumeUploader = ({ onFileSelect, existingFile = null, error = null }) => {
   const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(existingFile);
+  const toPreviewString = (f) =>
+    !f ? null : typeof f === 'string' ? f : f?.filename ?? null;
+  const [preview, setPreview] = useState(() => toPreviewString(existingFile));
   const [dragActive, setDragActive] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!file) setPreview(toPreviewString(existingFile));
+  }, [existingFile]);
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED_TYPES = ['application/pdf'];
@@ -109,14 +115,14 @@ const ResumeUploader = ({ onFileSelect, existingFile = null, error = null }) => 
             transition-colors
             ${dragActive
               ? 'border-brand-500 bg-brand-50'
-              : 'border-zinc-300 hover:border-zinc-400 bg-zinc-50'
+              : 'border-stone-300 hover:border-stone-400 bg-stone-50'
             }
             ${(uploadError || error) ? 'border-red-300 bg-red-50' : ''}
           `}
         >
           <Upload className={`
             w-12 h-12 mx-auto mb-4
-            ${dragActive ? 'text-brand-500' : 'text-zinc-400'}
+            ${dragActive ? 'text-brand-500' : 'text-stone-400'}
           `} />
           
           <p className="text-sm font-medium text-gray-700 mb-1">
