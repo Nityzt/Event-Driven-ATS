@@ -57,7 +57,7 @@ export default function Modal({ open, onClose, title, size = 'md', children, foo
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in"
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
     >
@@ -69,13 +69,13 @@ export default function Modal({ open, onClose, title, size = 'md', children, foo
         aria-labelledby={titleId}
         className={cn(
           'relative w-full bg-white rounded-2xl shadow-modal animate-scale-in',
-          'flex flex-col max-h-[90vh]',
+          'flex flex-col max-h-[90vh] max-h-[90dvh]',
           sizes[size],
           className,
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3.5 sm:px-6 sm:py-4 border-b border-stone-200 flex-shrink-0">
           <h2 id={titleId} className="text-lg font-semibold text-stone-900">{title}</h2>
           <button
             onClick={onClose}
@@ -87,13 +87,13 @@ export default function Modal({ open, onClose, title, size = 'md', children, foo
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           {children}
         </div>
 
-        {/* Footer */}
+        {/* Footer — stacks to full-width actions on mobile, inline-right on larger screens */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-stone-200 flex-shrink-0">
+          <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-end sm:gap-3 sm:px-6 sm:py-4 border-t border-stone-200 flex-shrink-0 [&>*]:w-full sm:[&>*]:w-auto">
             {footer}
           </div>
         )}

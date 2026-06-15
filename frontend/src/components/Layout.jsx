@@ -21,7 +21,7 @@ const Layout = () => {
 
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <Navbar setSidebarOpen={setSidebarOpen} />
-        <main className="flex-1 flex flex-col overflow-y-auto p-6 custom-scrollbar">
+        <main className="flex-1 flex flex-col overflow-y-auto p-4 sm:p-6 custom-scrollbar">
           <Outlet />
         </main>
       </div>

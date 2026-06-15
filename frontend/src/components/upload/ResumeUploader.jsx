@@ -111,7 +111,7 @@ const ResumeUploader = ({ onFileSelect, existingFile = null, error = null }) => 
           onDragOver={handleDrag}
           onDrop={handleDrop}
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
+            border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
             transition-colors
             ${dragActive
               ? 'border-brand-500 bg-brand-50'
@@ -125,26 +125,26 @@ const ResumeUploader = ({ onFileSelect, existingFile = null, error = null }) => 
             ${dragActive ? 'text-brand-500' : 'text-stone-400'}
           `} />
           
-          <p className="text-sm font-medium text-gray-700 mb-1">
+          <p className="text-sm font-medium text-stone-700 mb-1">
             Click to upload or drag and drop
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-stone-500">
             PDF only (max 5MB)
           </p>
         </div>
       ) : (
-        <div className="border border-gray-300 rounded-lg p-4 bg-white">
+        <div className="border border-stone-300 rounded-xl p-4 bg-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-brand-100 rounded-lg">
                 <FileText className="w-6 h-6 text-brand-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-800">
+                <p className="text-sm font-medium text-stone-800">
                   {preview}
                 </p>
                 {file && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-stone-500">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 )}
@@ -155,9 +155,9 @@ const ResumeUploader = ({ onFileSelect, existingFile = null, error = null }) => 
               <CheckCircle className="w-5 h-5 text-green-500" />
               <button
                 onClick={handleRemove}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 hover:bg-stone-100 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-stone-500" />
               </button>
             </div>
           </div>

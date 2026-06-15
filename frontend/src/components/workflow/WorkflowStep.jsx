@@ -3,6 +3,10 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Mail, MessageSquare, Clock, Webhook, Trash2 } from 'lucide-react';
 
+// Shared field styling so every step input/select/textarea stays visually consistent.
+const fieldClass = 'w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors';
+const labelClass = 'block text-sm font-medium text-stone-700 mb-1';
+
 const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
     id: step.id 
@@ -44,14 +48,14 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white border-2 rounded-lg p-4 ${error ? 'border-red-300' : 'border-gray-200'}`}
+      className={`bg-white border-2 rounded-xl p-4 ${error ? 'border-red-300' : 'border-stone-200'}`}
     >
       <div className="flex items-start gap-3">
         {/* Drag Handle */}
         <div
           {...attributes}
           {...listeners}
-          className="cursor-move mt-1 text-gray-400 hover:text-gray-600"
+          className="cursor-move mt-1 text-stone-400 hover:text-stone-600"
         >
           <GripVertical className="w-5 h-5" />
         </div>
@@ -64,7 +68,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
         {/* Step Content */}
         <div className="flex-1">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">
+            <h3 className="font-semibold text-stone-800">
               {index + 1}. {getStepTitle()}
             </h3>
             <button
@@ -79,29 +83,29 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
           {step.type === 'sendEmail' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={labelClass}>
                   Subject
                 </label>
                 <input
                   type="text"
                   value={step.config.subject || ''}
                   onChange={(e) => updateConfig('subject', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  className={fieldClass}
                   placeholder="Email subject"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={labelClass}>
                   Message
                 </label>
                 <textarea
                   value={step.config.message || ''}
                   onChange={(e) => updateConfig('message', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  className={fieldClass}
                   rows="4"
                   placeholder="Use {{candidate.name}}, {{job.title}}, etc."
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-stone-500 mt-1">
                   Available variables: {'{'}{'{'} candidate.name {'}'}{'}'}, {'{'}{'{'} candidate.email {'}'}{'}'}, {'{'}{'{'} job.title {'}'}{'}'}, {'{'}{'{'} job.location {'}'}{'}'}
                 </p>
               </div>
@@ -110,17 +114,17 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
 
           {step.type === 'sendSMS' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={labelClass}>
                 Message
               </label>
               <textarea
                 value={step.config.message || ''}
                 onChange={(e) => updateConfig('message', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className={fieldClass}
                 rows="3"
                 placeholder="Use {{candidate.name}}, {{candidate.phone}}, etc."
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-stone-500 mt-1">
                 Available variables: {'{'}{'{'} candidate.name {'}'}{'}'}, {'{'}{'{'} candidate.phone {'}'}{'}'}, {'{'}{'{'} job.title {'}'}{'}'}
               </p>
             </div>
@@ -129,25 +133,25 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
           {step.type === 'wait' && (
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={labelClass}>
                   Duration
                 </label>
                 <input
                   type="number"
                   value={step.config.duration || 24}
                   onChange={(e) => updateConfig('duration', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  className={fieldClass}
                   min="1"
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={labelClass}>
                   Unit
                 </label>
                 <select
                   value={step.config.unit || 'hours'}
                   onChange={(e) => updateConfig('unit', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  className={fieldClass}
                 >
                   <option value="minutes">Minutes</option>
                   <option value="hours">Hours</option>
@@ -160,26 +164,26 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
           {step.type === 'webhook' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={labelClass}>
                   URL
                 </label>
                 <input
                   type="url"
                   value={step.config.url || ''}
                   onChange={(e) => updateConfig('url', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  className={fieldClass}
                   placeholder="https://example.com/webhook"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={labelClass}>
                     Method
                   </label>
                   <select
                     value={step.config.method || 'POST'}
                     onChange={(e) => updateConfig('method', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    className={fieldClass}
                   >
                     <option value="GET">GET</option>
                     <option value="POST">POST</option>
@@ -188,13 +192,13 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={labelClass}>
                     Payload (JSON)
                   </label>
                   <textarea
                     value={step.config.payload || '{}'}
                     onChange={(e) => updateConfig('payload', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    className={fieldClass}
                     rows="2"
                   />
                 </div>

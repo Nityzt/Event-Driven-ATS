@@ -134,8 +134,8 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="bg-white rounded-xl shadow-card p-6">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="bg-white rounded-xl shadow-card p-4 sm:p-6">
         <h1 className="text-xl font-bold text-stone-900 mb-6">
           {existingWorkflow ? 'Edit Workflow' : 'New Workflow'}
         </h1>
@@ -191,8 +191,8 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
         <StepPalette onAddStep={addStep} />
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-stone-200">
-          <label className="flex items-center gap-2 mr-auto cursor-pointer">
+        <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-stone-200 sm:flex-row sm:items-center">
+          <label className="flex items-center gap-2 cursor-pointer sm:mr-auto">
             <input
               type="checkbox"
               checked={workflow.enabled}
@@ -201,20 +201,22 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
             />
             <span className="text-sm text-stone-700">Enable workflow</span>
           </label>
-          {onCancel && (
-            <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          )}
-          <Button
-            variant="outline"
-            leftIcon={<Eye className="w-4 h-4" />}
-            loading={previewing}
-            onClick={handlePreview}
-          >
-            Preview
-          </Button>
-          <Button variant="primary" loading={saving} onClick={handleSave}>
-            {existingWorkflow ? 'Save Changes' : 'Create Workflow'}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 [&>*]:w-full sm:[&>*]:w-auto">
+            {onCancel && (
+              <Button variant="outline" onClick={onCancel}>Cancel</Button>
+            )}
+            <Button
+              variant="outline"
+              leftIcon={<Eye className="w-4 h-4" />}
+              loading={previewing}
+              onClick={handlePreview}
+            >
+              Preview
+            </Button>
+            <Button variant="primary" loading={saving} onClick={handleSave}>
+              {existingWorkflow ? 'Save Changes' : 'Create Workflow'}
+            </Button>
+          </div>
         </div>
       </div>
 

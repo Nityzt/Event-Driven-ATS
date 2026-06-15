@@ -292,11 +292,11 @@ const JobModal = ({ open, job, onClose, onSuccess }) => {
             rows={4}
             value={formData.description}
             onChange={set('description')}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors resize-none"
+            className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors resize-none"
             placeholder="Describe the role, responsibilities, and requirements…"
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="Location" value={formData.location} onChange={set('location')} placeholder="Remote, New York…" />
           <Select label="Seniority" value={formData.seniority} onChange={set('seniority')}>
             <option value="">Select level…</option>

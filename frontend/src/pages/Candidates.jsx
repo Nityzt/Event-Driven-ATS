@@ -301,11 +301,11 @@ const CandidateModal = ({ open, candidate, onClose, onSuccess }) => {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="Full Name *" value={formData.name} onChange={set('name')} error={errors.name} placeholder="Jane Smith" />
           <Input label="Email *" type="email" value={formData.email} onChange={set('email')} error={errors.email} placeholder="jane@example.com" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="Phone" type="tel" value={formData.phone} onChange={set('phone')} placeholder="+1 555 000 0000" />
           <Input label="Location" value={formData.location} onChange={set('location')} placeholder="Remote, New York…" />
         </div>

@@ -13,7 +13,6 @@ import Modal from '../components/ui/Modal';
 import EmptyState from '../components/ui/EmptyState';
 import PageHeader from '../components/ui/PageHeader';
 import Spinner from '../components/ui/Spinner';
-import { TableRowSkeleton } from '../components/ui/Skeleton';
 
 const STAGES = ['Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected'];
 
@@ -55,7 +54,7 @@ const TriggerModal = ({ app, onClose, onTriggered }) => {
       title={`Trigger Workflow — ${app.candidate?.name || 'Application'}`}
       size="md"
       footer={
-        <div className="flex justify-end gap-2">
+        <>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button
             variant="primary"
@@ -66,7 +65,7 @@ const TriggerModal = ({ app, onClose, onTriggered }) => {
           >
             Run
           </Button>
-        </div>
+        </>
       }
     >
       {loading ? (
@@ -100,6 +99,68 @@ const TriggerModal = ({ app, onClose, onTriggered }) => {
     </Modal>
   );
 };
+
+// ── shared cells (reused by the desktop table and the mobile cards) ─────────────
+
+function CandidateIdentity({ app }) {
+  const name = app.candidate?.name || 'Unknown';
+  return (
+    <div className="flex items-center gap-2.5 min-w-0">
+      <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 text-xs font-semibold flex-shrink-0">
+        {(name).charAt(0).toUpperCase()}
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-stone-800 truncate">{name}</p>
+        <p className="text-xs text-stone-400 truncate">{app.candidate?.email}</p>
+      </div>
+    </div>
+  );
+}
+
+function StageControl({ stage, onChange }) {
+  return (
+    <select
+      value={stage}
+      onChange={onChange}
+      aria-label="Change application stage"
+      className="text-xs border border-stone-200 rounded-md px-2 py-1 bg-white text-stone-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+    >
+      {STAGES.map(s => <option key={s}>{s}</option>)}
+    </select>
+  );
+}
+
+function ApplicationActions({ onView, onTrigger }) {
+  return (
+    <div className="flex items-center gap-1">
+      <Button variant="ghost" size="sm" leftIcon={<Eye className="w-3.5 h-3.5" />} onClick={onView}>
+        Timeline
+      </Button>
+      <Button variant="ghost" size="sm" leftIcon={<Zap className="w-3.5 h-3.5" />} onClick={onTrigger} title="Trigger workflow">
+        Trigger
+      </Button>
+    </div>
+  );
+}
+
+function ApplicationListSkeleton() {
+  return (
+    <Card padding="none">
+      <div className="divide-y divide-stone-100">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-4 sm:px-6">
+            <div className="skeleton-shimmer w-8 h-8 rounded-full flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton-shimmer h-3.5 w-1/3 rounded" />
+              <div className="skeleton-shimmer h-3 w-1/4 rounded" />
+            </div>
+            <div className="skeleton-shimmer h-6 w-16 rounded-full flex-shrink-0" />
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
 
 const Applications = () => {
   const [applications, setApplications] = useState([]);
@@ -157,90 +218,76 @@ const Applications = () => {
         />
       </Card>
 
-      <Card padding="none">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-stone-50 border-b border-stone-200">
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Candidate</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Position</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Stage</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Applied</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {loading ? (
-                <TableRowSkeleton rows={6} />
-              ) : applications.length === 0 ? (
-                <tr>
-                  <td colSpan={5}>
-                    <EmptyState
-                      icon={FileText}
-                      title="No applications found"
-                      description={debouncedSearch ? `No applications matching "${debouncedSearch}"` : 'Applications appear here when candidates apply to your job openings.'}
-                    />
-                  </td>
-                </tr>
-              ) : (
-                applications.map(app => (
-                  <tr key={app._id} className="hover:bg-stone-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 text-xs font-semibold flex-shrink-0">
-                          {(app.candidate?.name || '?').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-stone-800">{app.candidate?.name || 'Unknown'}</p>
-                          <p className="text-xs text-stone-400">{app.candidate?.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-stone-700">{app.job?.title || 'Unknown'}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>
-                        <select
-                          value={app.stage}
-                          onChange={e => handleStageChange(app._id, e.target.value)}
-                          aria-label="Change application stage"
-                          className="text-xs border border-stone-200 rounded-md px-2 py-1 bg-white text-stone-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                        >
-                          {STAGES.map(s => <option key={s}>{s}</option>)}
-                        </select>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-stone-500">
-                      {new Date(app.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          leftIcon={<Eye className="w-3.5 h-3.5" />}
-                          onClick={() => viewTimeline(app)}
-                        >
-                          Timeline
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          leftIcon={<Zap className="w-3.5 h-3.5" />}
-                          onClick={() => setTriggerApp(app)}
-                          title="Trigger workflow"
-                        >
-                          Trigger
-                        </Button>
-                      </div>
-                    </td>
+      {loading ? (
+        <ApplicationListSkeleton />
+      ) : applications.length === 0 ? (
+        <Card padding="lg">
+          <EmptyState
+            icon={FileText}
+            title="No applications found"
+            description={debouncedSearch ? `No applications matching "${debouncedSearch}"` : 'Applications appear here when candidates apply to your job openings.'}
+          />
+        </Card>
+      ) : (
+        <>
+          {/* Desktop — table */}
+          <Card padding="none" className="hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-stone-50 border-b border-stone-200">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Candidate</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Position</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Stage</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Applied</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {applications.map(app => (
+                    <tr key={app._id} className="hover:bg-stone-50 transition-colors">
+                      <td className="px-6 py-4"><CandidateIdentity app={app} /></td>
+                      <td className="px-6 py-4 text-sm text-stone-700">{app.job?.title || 'Unknown'}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>
+                          <StageControl stage={app.stage} onChange={e => handleStageChange(app._id, e.target.value)} />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-stone-500">
+                        {new Date(app.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <ApplicationActions onView={() => viewTimeline(app)} onTrigger={() => setTriggerApp(app)} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Mobile — stacked cards */}
+          <div className="md:hidden space-y-3">
+            {applications.map(app => (
+              <Card key={app._id} className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <CandidateIdentity app={app} />
+                  <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>
+                </div>
+                <div className="flex items-center justify-between gap-3 text-xs text-stone-500">
+                  <span className="truncate">{app.job?.title || 'Unknown'}</span>
+                  <span className="flex-shrink-0 tabular-nums">{new Date(app.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-stone-100">
+                  <StageControl stage={app.stage} onChange={e => handleStageChange(app._id, e.target.value)} />
+                  <ApplicationActions onView={() => viewTimeline(app)} onTrigger={() => setTriggerApp(app)} />
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
 
       <Modal
         open={showTimeline}

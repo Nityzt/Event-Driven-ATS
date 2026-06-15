@@ -12,11 +12,27 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;  /* keep text size stable on orientation change */
+  text-size-adjust: 100%;
 }
 
 body {
   background-color: #f4f3ee;       /* warm off-white canvas */
   color: #1c1917;                  /* warm ink (stone-900) */
+  overflow-x: hidden;              /* safety net against accidental horizontal scroll on mobile */
+}
+
+/*
+ * iOS Safari zooms the viewport when a focused field's font is < 16px.
+ * Force 16px on touch-width screens so focusing any input never triggers a zoom,
+ * while desktop keeps the denser 14px (text-sm) scale.
+ */
+@media (max-width: 639px) {
+  input:not([type='range']):not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Tabular, mono figures give data a calm, precise rhythm. */

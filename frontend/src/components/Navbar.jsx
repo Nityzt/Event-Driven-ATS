@@ -224,11 +224,11 @@ export const Navbar = ({ setSidebarOpen }) => {
             )}
           </div>
 
-          {/* Settings */}
+          {/* Settings — hidden on the smallest screens to give search room (Profile is in the avatar menu) */}
           <button
             onClick={() => navigate('/profile')}
             aria-label="Go to profile settings"
-            className="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
+            className="hidden sm:inline-flex items-center p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
           >
             <Settings className="w-5 h-5" />
           </button>

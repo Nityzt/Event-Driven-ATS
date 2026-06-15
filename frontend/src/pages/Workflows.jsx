@@ -242,6 +242,38 @@ const WorkflowCard = ({ workflow, confirmDelete, onToggle, onEdit, onDeleteInten
   </Card>
 );
 
+const RunControls = ({ run, onAction }) => (
+  <div className="flex gap-1">
+    {run.state === 'running' && (
+      <button
+        onClick={() => onAction(run._id, 'pause')}
+        aria-label="Pause run"
+        className="p-1.5 hover:bg-amber-50 rounded-lg text-amber-600 transition-colors"
+      >
+        <Pause className="w-4 h-4" />
+      </button>
+    )}
+    {run.state === 'paused' && (
+      <button
+        onClick={() => onAction(run._id, 'resume')}
+        aria-label="Resume run"
+        className="p-1.5 hover:bg-green-50 rounded-lg text-green-600 transition-colors"
+      >
+        <Play className="w-4 h-4" />
+      </button>
+    )}
+    {['running', 'paused', 'queued'].includes(run.state) && (
+      <button
+        onClick={() => onAction(run._id, 'cancel')}
+        aria-label="Cancel run"
+        className="p-1.5 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
+      >
+        <Square className="w-4 h-4" />
+      </button>
+    )}
+  </div>
+);
+
 const RunsTable = ({ runs, onAction, hasRole }) => {
   const canControl = hasRole?.(['Admin', 'Recruiter']);
 
@@ -256,72 +288,68 @@ const RunsTable = ({ runs, onAction, hasRole }) => {
   }
 
   return (
-    <Card padding="none">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-stone-50 border-b border-stone-200">
-              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Workflow</th>
-              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">State</th>
-              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Progress</th>
-              <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Started</th>
-              {canControl && <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-stone-100">
-            {runs.map(run => (
-              <tr key={run._id} className="hover:bg-stone-50 transition-colors">
-                <td className="px-5 py-3.5 font-medium text-stone-800">
-                  {run.workflowId?.name || '—'}
-                </td>
-                <td className="px-5 py-3.5">
-                  <Badge variant={stateToBadgeVariant(run.state)} size="sm">{run.state}</Badge>
-                </td>
-                <td className="px-5 py-3.5 text-stone-500 text-xs">
-                  Step {run.stepPointer} / {run.workflowId?.steps?.length || '?'}
-                </td>
-                <td className="px-5 py-3.5 text-stone-400 text-xs">
-                  {run.startedAt ? new Date(run.startedAt).toLocaleString() : '—'}
-                </td>
-                {canControl && (
-                  <td className="px-5 py-3.5">
-                    <div className="flex gap-1">
-                      {run.state === 'running' && (
-                        <button
-                          onClick={() => onAction(run._id, 'pause')}
-                          aria-label="Pause run"
-                          className="p-1.5 hover:bg-amber-50 rounded-lg text-amber-600 transition-colors"
-                        >
-                          <Pause className="w-4 h-4" />
-                        </button>
-                      )}
-                      {run.state === 'paused' && (
-                        <button
-                          onClick={() => onAction(run._id, 'resume')}
-                          aria-label="Resume run"
-                          className="p-1.5 hover:bg-green-50 rounded-lg text-green-600 transition-colors"
-                        >
-                          <Play className="w-4 h-4" />
-                        </button>
-                      )}
-                      {['running', 'paused', 'queued'].includes(run.state) && (
-                        <button
-                          onClick={() => onAction(run._id, 'cancel')}
-                          aria-label="Cancel run"
-                          className="p-1.5 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
-                        >
-                          <Square className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                )}
+    <>
+      {/* Desktop — table */}
+      <Card padding="none" className="hidden md:block">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-stone-50 border-b border-stone-200">
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Workflow</th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">State</th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Progress</th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Started</th>
+                {canControl && <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Actions</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-stone-100">
+              {runs.map(run => (
+                <tr key={run._id} className="hover:bg-stone-50 transition-colors">
+                  <td className="px-5 py-3.5 font-medium text-stone-800">
+                    {run.workflowId?.name || '—'}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <Badge variant={stateToBadgeVariant(run.state)} size="sm">{run.state}</Badge>
+                  </td>
+                  <td className="px-5 py-3.5 text-stone-500 text-xs">
+                    Step {run.stepPointer} / {run.workflowId?.steps?.length || '?'}
+                  </td>
+                  <td className="px-5 py-3.5 text-stone-400 text-xs">
+                    {run.startedAt ? new Date(run.startedAt).toLocaleString() : '—'}
+                  </td>
+                  {canControl && (
+                    <td className="px-5 py-3.5"><RunControls run={run} onAction={onAction} /></td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Mobile — cards */}
+      <div className="md:hidden space-y-3">
+        {runs.map(run => (
+          <Card key={run._id} className="space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-stone-800 truncate">{run.workflowId?.name || '—'}</p>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  {run.startedAt ? new Date(run.startedAt).toLocaleString() : '—'}
+                </p>
+              </div>
+              <Badge variant={stateToBadgeVariant(run.state)} size="sm">{run.state}</Badge>
+            </div>
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-stone-100">
+              <span className="text-xs text-stone-500">
+                Step {run.stepPointer} / {run.workflowId?.steps?.length || '?'}
+              </span>
+              {canControl && <RunControls run={run} onAction={onAction} />}
+            </div>
+          </Card>
+        ))}
       </div>
-    </Card>
+    </>
   );
 };
 

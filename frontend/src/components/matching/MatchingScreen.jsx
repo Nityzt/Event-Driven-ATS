@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, RefreshCw, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Search, Filter, RefreshCw, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import JobSelector from './JobSelector';
 import CandidateList from './CandidateList';
@@ -7,6 +7,7 @@ import apiClient from '../../api/client';
 import useDebounce from '../../hooks/useDebounce';
 import Spinner from '../ui/Spinner';
 import Button from '../ui/Button';
+import { cn } from '../../lib/utils';
 
 const MatchingScreen = () => {
   const [selectedJob, setSelectedJob] = useState(null);
@@ -46,6 +47,11 @@ const MatchingScreen = () => {
 
   const handleFilterChange = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
 
+  const handleSelectJob = (job) => {
+    setSelectedJob(job);
+    if (window.innerWidth < 1024) setJobPanelOpen(false); // close the overlay drawer on mobile after picking
+  };
+
   const handleRunMatch = async () => {
     if (!selectedJob) return;
     setLoading(true);
@@ -61,16 +67,38 @@ const MatchingScreen = () => {
   };
 
   return (
-    <div className="flex flex-1 min-h-0 overflow-hidden">
-      {/* Left Panel: Job Selector */}
+    <div className="relative flex flex-1 min-h-0 overflow-hidden">
+      {/* Mobile backdrop for the job drawer */}
+      {jobPanelOpen && (
+        <div
+          className="absolute inset-0 z-20 bg-black/40 lg:hidden"
+          onClick={() => setJobPanelOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Left Panel: Job Selector — overlay drawer on mobile, width-collapsing push panel on desktop */}
       <div
-        className={`${jobPanelOpen ? 'w-72' : 'w-0'} flex-shrink-0 bg-white border-r border-stone-200 flex flex-col overflow-hidden transition-[width] duration-200`}
+        className={cn(
+          'bg-white border-r border-stone-200 flex flex-col overflow-hidden',
+          'absolute inset-y-0 left-0 z-30 w-72 max-w-[85%] transition-transform duration-200',
+          jobPanelOpen ? 'translate-x-0' : '-translate-x-full',
+          'lg:relative lg:z-auto lg:max-w-none lg:translate-x-0 lg:transition-[width]',
+          jobPanelOpen ? 'lg:w-72' : 'lg:w-0',
+        )}
       >
-        <div className="px-4 py-3 border-b border-stone-100 flex-shrink-0">
+        <div className="px-4 py-3 border-b border-stone-100 flex-shrink-0 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-stone-700">Select Job</h2>
+          <button
+            onClick={() => setJobPanelOpen(false)}
+            aria-label="Close job list"
+            className="lg:hidden p-1 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar min-w-[288px]">
-          <JobSelector selectedJob={selectedJob} onSelect={setSelectedJob} />
+          <JobSelector selectedJob={selectedJob} onSelect={handleSelectJob} />
         </div>
       </div>
 
