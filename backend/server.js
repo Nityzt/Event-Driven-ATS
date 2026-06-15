@@ -17,6 +17,12 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Trust the first proxy hop (Render/Vercel/Heroku put the app behind one
+// reverse proxy). Required for express-rate-limit to read X-Forwarded-For
+// correctly. Use a specific hop count (1), not `true`, so clients can't
+// spoof X-Forwarded-For to evade rate limits.
+app.set('trust proxy', 1);
+
 // Security + OWASP headers
 app.use(helmet());
 app.use(cors({
