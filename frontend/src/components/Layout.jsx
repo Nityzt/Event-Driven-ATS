@@ -7,7 +7,7 @@ const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
 
   return (
-    <div className="flex h-screen bg-surface-muted overflow-hidden">
+    <div className="flex h-screen bg-surface-muted dark:bg-stone-950 overflow-hidden">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {/* Mobile overlay */}

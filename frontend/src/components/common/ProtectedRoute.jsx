@@ -12,13 +12,13 @@ const ProtectedRoute = ({ children, roles = [] }) => {
   if (roles.length > 0 && !roles.includes(user.role)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-6">
-        <div className="bg-white rounded-xl border border-stone-200 shadow-card p-8 max-w-sm w-full text-center">
-          <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <ShieldOff className="w-6 h-6 text-red-500" />
+        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 shadow-card p-8 max-w-sm w-full text-center">
+          <div className="w-12 h-12 bg-red-50 dark:bg-red-950/40 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <ShieldOff className="w-6 h-6 text-red-500 dark:text-red-400" />
           </div>
-          <h2 className="text-base font-semibold text-stone-900 mb-1">Access Denied</h2>
-          <p className="text-sm text-stone-500">
-            This page requires the <span className="font-medium text-stone-700">{roles.join(' or ')}</span> role.
+          <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100 mb-1">Access Denied</h2>
+          <p className="text-sm text-stone-500 dark:text-stone-400">
+            This page requires the <span className="font-medium text-stone-700 dark:text-stone-300">{roles.join(' or ')}</span> role.
           </p>
         </div>
       </div>

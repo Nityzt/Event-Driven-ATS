@@ -36,21 +36,21 @@ function LogChanges({ log }) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
       {log.changes?.before && (
         <div>
-          <p className="font-semibold text-stone-500 mb-1.5 font-sans">Before</p>
-          <pre className="bg-white border border-stone-200 rounded-lg p-3 overflow-x-auto text-stone-600 text-xs leading-relaxed custom-scrollbar">
+          <p className="font-semibold text-stone-500 dark:text-stone-400 mb-1.5 font-sans">Before</p>
+          <pre className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-3 overflow-x-auto text-stone-600 dark:text-stone-400 text-xs leading-relaxed custom-scrollbar">
             {JSON.stringify(log.changes.before, null, 2)}
           </pre>
         </div>
       )}
       {log.changes?.after && (
         <div>
-          <p className="font-semibold text-stone-500 mb-1.5 font-sans">After</p>
-          <pre className="bg-white border border-stone-200 rounded-lg p-3 overflow-x-auto text-stone-600 text-xs leading-relaxed custom-scrollbar">
+          <p className="font-semibold text-stone-500 dark:text-stone-400 mb-1.5 font-sans">After</p>
+          <pre className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-3 overflow-x-auto text-stone-600 dark:text-stone-400 text-xs leading-relaxed custom-scrollbar">
             {JSON.stringify(log.changes.after, null, 2)}
           </pre>
         </div>
       )}
-      {!hasChanges && <p className="text-stone-400 font-sans">No change data recorded.</p>}
+      {!hasChanges && <p className="text-stone-400 dark:text-stone-500 font-sans">No change data recorded.</p>}
     </div>
   );
 }
@@ -58,7 +58,7 @@ function LogChanges({ log }) {
 function AuditLogSkeleton() {
   return (
     <Card padding="none">
-      <div className="divide-y divide-stone-100">
+      <div className="divide-y divide-stone-100 dark:divide-stone-800">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-5 py-4">
             <div className="skeleton-shimmer h-6 w-20 rounded-full flex-shrink-0" />
@@ -171,34 +171,34 @@ const AuditLogs = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-stone-50 border-b border-stone-200">
-                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Timestamp</th>
-                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Action</th>
-                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Resource</th>
-                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">User</th>
-                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wide">Ref ID</th>
+                  <tr className="bg-stone-50 dark:bg-stone-800/60 border-b border-stone-200 dark:border-stone-800">
+                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide">Timestamp</th>
+                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide">Action</th>
+                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide">Resource</th>
+                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide">User</th>
+                    <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wide">Ref ID</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
                   {filtered.map(log => {
                     const isOpen = expandedLog === log._id;
                     return (
                       <Fragment key={log._id}>
                         <tr
-                          className="hover:bg-stone-50 cursor-pointer transition-colors"
+                          className="hover:bg-stone-50 dark:hover:bg-stone-800 cursor-pointer transition-colors"
                           onClick={() => setExpandedLog(isOpen ? null : log._id)}
                         >
-                          <td className="px-5 py-3.5 text-stone-500 whitespace-nowrap text-xs">
+                          <td className="px-5 py-3.5 text-stone-500 dark:text-stone-400 whitespace-nowrap text-xs">
                             {new Date(log.createdAt).toLocaleString()}
                           </td>
                           <td className="px-5 py-3.5">
                             <Badge variant={actionToVariant(log.action)} size="sm">{log.action}</Badge>
                           </td>
-                          <td className="px-5 py-3.5 text-stone-700">{log.resource || '—'}</td>
-                          <td className="px-5 py-3.5 text-stone-600 text-xs">
+                          <td className="px-5 py-3.5 text-stone-700 dark:text-stone-300">{log.resource || '—'}</td>
+                          <td className="px-5 py-3.5 text-stone-600 dark:text-stone-400 text-xs">
                             {log.user?.name || log.user?.email || '—'}
                           </td>
-                          <td className="px-5 py-3.5 text-stone-400 text-xs">
+                          <td className="px-5 py-3.5 text-stone-400 dark:text-stone-500 text-xs">
                             <span className="flex items-center gap-1">
                               {log.correlationId ? `${log.correlationId.slice(0, 8)}…` : '—'}
                               {isOpen
@@ -209,7 +209,7 @@ const AuditLogs = () => {
                           </td>
                         </tr>
                         {isOpen && (
-                          <tr className="bg-stone-50">
+                          <tr className="bg-stone-50 dark:bg-stone-800/60">
                             <td colSpan={5} className="px-5 py-4"><LogChanges log={log} /></td>
                           </tr>
                         )}
@@ -235,21 +235,21 @@ const AuditLogs = () => {
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant={actionToVariant(log.action)} size="sm">{log.action}</Badge>
-                        <span className="text-sm text-stone-700">{log.resource || '—'}</span>
+                        <span className="text-sm text-stone-700 dark:text-stone-300">{log.resource || '—'}</span>
                       </div>
-                      <p className="text-xs text-stone-400">{new Date(log.createdAt).toLocaleString()}</p>
-                      <p className="text-xs text-stone-500 truncate">
+                      <p className="text-xs text-stone-400 dark:text-stone-500">{new Date(log.createdAt).toLocaleString()}</p>
+                      <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
                         {log.user?.name || log.user?.email || '—'}
-                        {log.correlationId && <span className="text-stone-400"> · {log.correlationId.slice(0, 8)}…</span>}
+                        {log.correlationId && <span className="text-stone-400 dark:text-stone-500"> · {log.correlationId.slice(0, 8)}…</span>}
                       </p>
                     </div>
                     {isOpen
-                      ? <ChevronUp className="w-4 h-4 text-stone-400 flex-shrink-0 mt-0.5" />
-                      : <ChevronDown className="w-4 h-4 text-stone-300 flex-shrink-0 mt-0.5" />
+                      ? <ChevronUp className="w-4 h-4 text-stone-400 dark:text-stone-500 flex-shrink-0 mt-0.5" />
+                      : <ChevronDown className="w-4 h-4 text-stone-300 dark:text-stone-600 flex-shrink-0 mt-0.5" />
                     }
                   </button>
                   {isOpen && (
-                    <div className="border-t border-stone-100 bg-stone-50 p-4">
+                    <div className="border-t border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/60 p-4">
                       <LogChanges log={log} />
                     </div>
                   )}
@@ -262,7 +262,7 @@ const AuditLogs = () => {
           {totalPages > 1 && (
             <Card padding="none">
               <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-stone-500 dark:text-stone-400">
                   Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
                 </p>
                 <div className="flex gap-2">

@@ -107,29 +107,29 @@ const Login = () => {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
+      <div className="flex-1 flex items-center justify-center p-8 bg-white dark:bg-stone-900">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">T</span>
             </div>
-            <span className="font-bold text-stone-900">TalentBay</span>
+            <span className="font-bold text-stone-900 dark:text-stone-100">TalentBay</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-stone-900 mb-1">
+          <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-1">
             {isRegistering ? 'Create your account' : 'Welcome back'}
           </h1>
-          <p className="text-stone-500 text-sm mb-8">
+          <p className="text-stone-500 dark:text-stone-400 text-sm mb-8">
             {isRegistering
               ? 'Start managing your recruitment pipeline today'
               : 'Sign in to access your recruitment dashboard'}
           </p>
 
           {errors.form && (
-            <div className="mb-5 flex items-start gap-3 bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{errors.form}</p>
+            <div className="mb-5 flex items-start gap-3 bg-red-50 dark:bg-red-950/40 border-l-4 border-red-500 rounded-lg p-4">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800 dark:text-red-200">{errors.form}</p>
             </div>
           )}
 
@@ -190,21 +190,21 @@ const Login = () => {
             </Button>
           </form>
 
-          <p className="text-center mt-6 text-sm text-stone-500">
+          <p className="text-center mt-6 text-sm text-stone-500 dark:text-stone-400">
             {isRegistering ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               type="button"
               onClick={switchMode}
-              className="text-brand-600 hover:text-brand-700 font-medium transition-colors"
+              className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors"
             >
               {isRegistering ? 'Sign in' : 'Register'}
             </button>
           </p>
 
           {!isRegistering && (
-            <div className="mt-6 pt-6 border-t border-stone-100 text-center">
-              <p className="text-xs text-stone-400">Demo credentials</p>
-              <p className="text-xs text-stone-500 mt-1">admin@ats.com / admin123</p>
+            <div className="mt-6 pt-6 border-t border-stone-100 dark:border-stone-800 text-center">
+              <p className="text-xs text-stone-400 dark:text-stone-500">Demo credentials</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">admin@ats.com / admin123</p>
             </div>
           )}
         </div>

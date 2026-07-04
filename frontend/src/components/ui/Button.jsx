@@ -3,11 +3,11 @@ import { cn } from '../../lib/utils';
 import Spinner from './Spinner';
 
 const variants = {
-  primary:   'bg-brand-600 text-white hover:bg-brand-700 focus-visible:ring-brand-500 shadow-sm',
-  secondary: 'bg-brand-50 text-brand-700 hover:bg-brand-100 focus-visible:ring-brand-500',
-  outline:   'border border-stone-300 text-stone-700 hover:bg-stone-50 focus-visible:ring-stone-400',
-  ghost:     'text-stone-600 hover:bg-stone-100 hover:text-stone-900 focus-visible:ring-stone-400',
-  danger:    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-sm',
+  primary:   'bg-brand-600 text-white hover:bg-brand-700 dark:hover:bg-brand-500 focus-visible:ring-brand-500 shadow-sm',
+  secondary: 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/50 focus-visible:ring-brand-500',
+  outline:   'border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 focus-visible:ring-stone-400',
+  ghost:     'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-stone-100 focus-visible:ring-stone-400',
+  danger:    'bg-red-600 text-white hover:bg-red-700 dark:hover:bg-red-500 focus-visible:ring-red-500 shadow-sm',
 };
 
 const sizes = {

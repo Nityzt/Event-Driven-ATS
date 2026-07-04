@@ -7,7 +7,7 @@ export const ScoreBar = ({ score }) => {
   };
 
   return (
-    <div className="w-32 h-2 bg-stone-200 rounded-full overflow-hidden mt-1">
+    <div className="w-32 h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden mt-1">
       <div
         className={`h-full ${getColor()} transition-all duration-500`}
         style={{ width: `${Math.min(score, 100)}%` }}

@@ -19,24 +19,24 @@ const STAGE_META = {
   Interview: { bar: 'bg-purple-400' },
   Offer:     { bar: 'bg-brand-500' },
   Hired:     { bar: 'bg-green-500' },
-  Rejected:  { bar: 'bg-stone-300' },
+  Rejected:  { bar: 'bg-stone-300 dark:bg-stone-600' },
 };
 
 const ACCENT = {
-  brand:  { icon: 'bg-brand-50 text-brand-600',   stripe: 'bg-brand-500' },
-  green:  { icon: 'bg-green-50 text-green-600',   stripe: 'bg-green-500' },
-  purple: { icon: 'bg-purple-50 text-purple-600', stripe: 'bg-purple-500' },
-  amber:  { icon: 'bg-amber-50 text-amber-600',   stripe: 'bg-amber-500' },
+  brand:  { icon: 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400',   stripe: 'bg-brand-500' },
+  green:  { icon: 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400',   stripe: 'bg-green-500' },
+  purple: { icon: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400', stripe: 'bg-purple-500' },
+  amber:  { icon: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400',   stripe: 'bg-amber-500' },
 };
 
 const AVATAR_PALETTE = [
-  'bg-blue-100 text-blue-700',
-  'bg-purple-100 text-purple-700',
-  'bg-green-100 text-green-700',
-  'bg-amber-100 text-amber-700',
+  'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+  'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
+  'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
   'bg-rose-100 text-rose-700',
   'bg-teal-100 text-teal-700',
-  'bg-brand-100 text-brand-700',
+  'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300',
   'bg-orange-100 text-orange-700',
 ];
 
@@ -46,7 +46,7 @@ const QUICK_ACTIONS = [
   { to: '/matches',      icon: Target,    label: 'Matching',      color: 'bg-purple-600' },
   { to: '/workflows',    icon: Workflow,  label: 'Workflows',     color: 'bg-amber-600' },
   { to: '/applications', icon: Activity,  label: 'Applications',  color: 'bg-teal-600' },
-  { to: '/audit-logs',   icon: Shield,    label: 'Audit Logs',    color: 'bg-stone-600' },
+  { to: '/audit-logs',   icon: Shield,    label: 'Audit Logs',    color: 'bg-stone-600 dark:bg-stone-400' },
 ];
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -141,7 +141,7 @@ const Dashboard = () => {
             const ac = ACCENT[accent];
             return (
               <Link key={title} to={link} className="group">
-                <div className="relative bg-white rounded-2xl border border-stone-100 shadow-card hover:shadow-card-hover transition-shadow duration-200 overflow-hidden p-5">
+                <div className="relative bg-white dark:bg-stone-900 rounded-2xl border border-stone-100 dark:border-stone-800 shadow-card hover:shadow-card-hover transition-shadow duration-200 overflow-hidden p-5">
                   {/* Top accent stripe — the identifying mark for each card */}
                   <div className={`absolute inset-x-0 top-0 h-[3px] ${ac.stripe}`} />
 
@@ -149,13 +149,13 @@ const Dashboard = () => {
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${ac.icon}`}>
                       <Icon className="w-4 h-4" />
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-0.5 transition-all mt-1" />
+                    <ArrowRight className="w-3.5 h-3.5 text-stone-300 dark:text-stone-600 group-hover:text-stone-500 dark:group-hover:text-stone-400 group-hover:translate-x-0.5 transition-all mt-1" />
                   </div>
 
-                  <p className="font-mono text-[2rem] font-semibold text-stone-900 tabular-nums leading-none">
+                  <p className="font-mono text-[2rem] font-semibold text-stone-900 dark:text-stone-100 tabular-nums leading-none">
                     {value.toLocaleString()}
                   </p>
-                  <p className="mt-2 text-[11px] font-semibold text-stone-400 uppercase tracking-widest">
+                  <p className="mt-2 text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest">
                     {title}
                   </p>
                 </div>
@@ -169,14 +169,14 @@ const Dashboard = () => {
       {!loading && totalInDist > 0 && (
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-stone-800">Pipeline</h2>
-            <span className="text-xs text-stone-400 tabular-nums">
+            <h2 className="text-sm font-semibold text-stone-800 dark:text-stone-200">Pipeline</h2>
+            <span className="text-xs text-stone-400 dark:text-stone-500 tabular-nums">
               {totalInDist} application{totalInDist !== 1 ? 's' : ''}
             </span>
           </div>
 
           {/* Stacked bar */}
-          <div className="flex rounded-full overflow-hidden h-2.5 mb-4 bg-stone-100">
+          <div className="flex rounded-full overflow-hidden h-2.5 mb-4 bg-stone-100 dark:bg-stone-800">
             {STAGE_ORDER.map(stage => {
               const count = stageDist[stage] || 0;
               if (!count) return null;
@@ -200,8 +200,8 @@ const Dashboard = () => {
               return (
                 <div key={stage} className="flex items-center gap-1.5">
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${STAGE_META[stage].bar}`} />
-                  <span className="text-xs text-stone-500">{stage}</span>
-                  <span className="text-xs font-semibold text-stone-700 tabular-nums">{count}</span>
+                  <span className="text-xs text-stone-500 dark:text-stone-400">{stage}</span>
+                  <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 tabular-nums">{count}</span>
                 </div>
               );
             })}
@@ -212,8 +212,8 @@ const Dashboard = () => {
       {/* ── System Activity ───────────────────────────────────────────────── */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-stone-800">System Activity</h2>
-          <span className="flex items-center gap-1.5 text-xs text-stone-400">
+          <h2 className="text-sm font-semibold text-stone-800 dark:text-stone-200">System Activity</h2>
+          <span className="flex items-center gap-1.5 text-xs text-stone-400 dark:text-stone-500">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -223,19 +223,19 @@ const Dashboard = () => {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { key: 'runs_started',  label: 'Runs Started',   icon: Play,          color: 'bg-brand-50 text-brand-600'   },
-            { key: 'emails_sent',   label: 'Emails Sent',    icon: Mail,          color: 'bg-green-50 text-green-600'   },
-            { key: 'sms_sent',      label: 'SMS Sent',       icon: MessageSquare, color: 'bg-purple-50 text-purple-600' },
-            { key: 'steps_retried', label: 'Steps Retried',  icon: RefreshCw,     color: 'bg-amber-50 text-amber-600'   },
+            { key: 'runs_started',  label: 'Runs Started',   icon: Play,          color: 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400'   },
+            { key: 'emails_sent',   label: 'Emails Sent',    icon: Mail,          color: 'bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400'   },
+            { key: 'sms_sent',      label: 'SMS Sent',       icon: MessageSquare, color: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400' },
+            { key: 'steps_retried', label: 'Steps Retried',  icon: RefreshCw,     color: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'   },
           ].map(({ key, label, icon: Icon, color }) => (
-            <div key={key} className="flex flex-col items-center justify-center gap-2 rounded-xl bg-stone-50 border border-stone-100 py-4 px-3">
+            <div key={key} className="flex flex-col items-center justify-center gap-2 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800 py-4 px-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
                 <Icon className="w-4 h-4" />
               </div>
-              <p className="font-mono text-2xl font-semibold text-stone-900 tabular-nums leading-none">
+              <p className="font-mono text-2xl font-semibold text-stone-900 dark:text-stone-100 tabular-nums leading-none">
                 {metrics ? (metrics[key] ?? 0).toLocaleString() : '—'}
               </p>
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest text-center">
+              <p className="text-[10px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest text-center">
                 {label}
               </p>
             </div>
@@ -248,14 +248,14 @@ const Dashboard = () => {
 
         {/* Recent Applications */}
         <Card className="lg:col-span-2" padding="none">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
-            <h2 className="text-sm font-semibold text-stone-800 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-brand-500" />
+          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 dark:border-stone-800">
+            <h2 className="text-sm font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-brand-500 dark:text-brand-400" />
               Recent Applications
             </h2>
             <Link
               to="/applications"
-              className="text-xs text-brand-600 hover:text-brand-700 font-medium flex items-center gap-0.5 transition-colors"
+              className="text-xs text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium flex items-center gap-0.5 transition-colors"
             >
               View all <ArrowRight className="w-3 h-3" />
             </Link>
@@ -267,24 +267,24 @@ const Dashboard = () => {
             </div>
           ) : recentApplications.length === 0 ? (
             <div className="px-5 py-14 text-center">
-              <FileText className="w-8 h-8 text-stone-200 mx-auto mb-2" />
-              <p className="text-sm text-stone-400">No applications yet</p>
+              <FileText className="w-8 h-8 text-stone-200 dark:text-stone-700 mx-auto mb-2" />
+              <p className="text-sm text-stone-400 dark:text-stone-500">No applications yet</p>
             </div>
           ) : (
-            <ul className="divide-y divide-stone-50">
+            <ul className="divide-y divide-stone-50 dark:divide-stone-800">
               {recentApplications.map(app => {
                 const name = app.candidate?.name || app.candidateId?.name || '?';
                 return (
                   <li
                     key={app._id}
-                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-stone-50/70 transition-colors"
+                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-stone-50/70 dark:hover:bg-stone-800 transition-colors"
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${nameToAvatarColor(name)}`}>
                       {name.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-stone-800 truncate">{name}</p>
-                      <p className="text-xs text-stone-400 truncate">
+                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200 truncate">{name}</p>
+                      <p className="text-xs text-stone-400 dark:text-stone-500 truncate">
                         {app.job?.title || app.jobId?.title || '—'}
                       </p>
                     </div>
@@ -292,7 +292,7 @@ const Dashboard = () => {
                       <Badge variant={stageToBadgeVariant(app.stage)} size="sm">
                         {app.stage}
                       </Badge>
-                      <span className="text-xs text-stone-400 hidden sm:block tabular-nums w-16 text-right">
+                      <span className="text-xs text-stone-400 dark:text-stone-500 hidden sm:block tabular-nums w-16 text-right">
                         {timeAgo(app.createdAt)}
                       </span>
                     </div>
@@ -305,20 +305,20 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <Card padding="none">
-          <div className="px-5 py-4 border-b border-stone-100">
-            <h2 className="text-sm font-semibold text-stone-800">Quick Actions</h2>
+          <div className="px-5 py-4 border-b border-stone-100 dark:border-stone-800">
+            <h2 className="text-sm font-semibold text-stone-800 dark:text-stone-200">Quick Actions</h2>
           </div>
           <div className="p-3 grid grid-cols-2 gap-1.5">
             {visibleActions.map(({ to, icon: Icon, label, color }) => (
               <Link
                 key={to}
                 to={to}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-stone-50 transition-colors group"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors group"
               >
                 <div className={`${color} w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-150`}>
                   <Icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-xs font-medium text-stone-500 group-hover:text-stone-800 transition-colors text-center leading-tight">
+                <span className="text-xs font-medium text-stone-500 dark:text-stone-400 group-hover:text-stone-800 dark:group-hover:text-stone-200 transition-colors text-center leading-tight">
                   {label}
                 </span>
               </Link>

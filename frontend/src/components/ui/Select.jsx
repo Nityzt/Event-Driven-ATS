@@ -17,7 +17,7 @@ export default function Select({
   return (
     <div className={cn('space-y-1.5', className)}>
       {label && (
-        <label htmlFor={selectId} className="block text-sm font-medium text-stone-700">
+        <label htmlFor={selectId} className="block text-sm font-medium text-stone-700 dark:text-stone-300">
           {label}
         </label>
       )}
@@ -25,12 +25,12 @@ export default function Select({
         <select
           id={selectId}
           className={cn(
-            'w-full appearance-none rounded-xl border bg-white px-3 py-2 pr-10 text-sm text-stone-900',
+            'w-full appearance-none rounded-xl border bg-white dark:bg-stone-900 px-3 py-2 pr-10 text-sm text-stone-900 dark:text-stone-100',
             'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
             'transition-colors duration-150',
             error
-              ? 'border-red-400 bg-red-50'
-              : 'border-stone-300',
+              ? 'border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/40'
+              : 'border-stone-300 dark:border-stone-700',
             selectClassName,
           )}
           aria-describedby={error ? `${selectId}-error` : hint ? `${selectId}-hint` : undefined}
@@ -38,13 +38,13 @@ export default function Select({
         >
           {children}
         </select>
-        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500 pointer-events-none" />
       </div>
       {hint && !error && (
-        <p id={`${selectId}-hint`} className="text-xs text-stone-500">{hint}</p>
+        <p id={`${selectId}-hint`} className="text-xs text-stone-500 dark:text-stone-400">{hint}</p>
       )}
       {error && (
-        <p id={`${selectId}-error`} className="text-xs text-red-600" role="alert">{error}</p>
+        <p id={`${selectId}-error`} className="text-xs text-red-600 dark:text-red-400" role="alert">{error}</p>
       )}
     </div>
   );

@@ -4,9 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 
 const ROLE_BADGE = {
-  Admin:     'bg-brand-100 text-brand-800',
-  Recruiter: 'bg-amber-100 text-amber-800',
-  Viewer:    'bg-stone-200 text-stone-600',
+  Admin:     'bg-brand-100 dark:bg-brand-900/40 text-brand-800 dark:text-brand-200',
+  Recruiter: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200',
+  Viewer:    'bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-400',
 };
 
 const PRIMARY_NAV = [
@@ -40,27 +40,27 @@ export const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-40 w-64 bg-surface-subtle border-r border-stone-200 flex flex-col',
+        'fixed inset-y-0 left-0 z-40 w-64 bg-surface-subtle dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 flex flex-col',
         'transition-transform duration-300 ease-in-out',
         'lg:relative lg:translate-x-0 lg:z-auto',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full',
       )}
     >
       {/* Brand header */}
-      <div className="flex items-center justify-between px-5 h-16 border-b border-stone-200 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 h-16 border-b border-stone-200 dark:border-stone-800 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0 shadow-sm">
             <span className="text-white font-bold text-base leading-none">T</span>
           </div>
           <div>
-            <p className="text-stone-900 font-semibold text-base leading-tight tracking-tight">TalentBay</p>
-            <p className="text-stone-400 text-2xs font-medium uppercase tracking-widest leading-tight">Recruitment OS</p>
+            <p className="text-stone-900 dark:text-stone-100 font-semibold text-base leading-tight tracking-tight">TalentBay</p>
+            <p className="text-stone-400 dark:text-stone-500 text-2xs font-medium uppercase tracking-widest leading-tight">Recruitment OS</p>
           </div>
         </div>
         <button
           onClick={() => setSidebarOpen(false)}
           aria-label="Close navigation menu"
-          className="lg:hidden p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+          className="lg:hidden p-1.5 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -78,8 +78,8 @@ export const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 'group relative flex items-center gap-3 px-3 py-2.5 rounded-xl',
                 'text-sm font-medium transition-colors duration-150',
                 isActive
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900',
+                  ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300'
+                  : 'text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-stone-100',
               )
             }
           >
@@ -102,13 +102,13 @@ export const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       </nav>
 
       {/* User footer */}
-      <div className="px-3 py-4 border-t border-stone-200 flex-shrink-0">
+      <div className="px-3 py-4 border-t border-stone-200 dark:border-stone-800 flex-shrink-0">
         <div className="flex items-center gap-3 px-2 py-2 rounded-xl">
           <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
             {initial}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-stone-800 text-sm font-medium truncate">{user?.name || 'User'}</p>
+            <p className="text-stone-800 dark:text-stone-200 text-sm font-medium truncate">{user?.name || 'User'}</p>
             <span className={cn('text-2xs font-semibold rounded px-1.5 py-0.5 inline-block mt-0.5', ROLE_BADGE[user?.role] || ROLE_BADGE.Viewer)}>
               {user?.role || 'Member'}
             </span>

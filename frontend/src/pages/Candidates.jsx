@@ -156,30 +156,30 @@ const CandidateCard = ({ candidate, confirmDelete, onEdit, onDeleteIntent, onDel
   <Card className="relative">
     <div className="flex items-start justify-between mb-3">
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-semibold text-sm flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/40 flex items-center justify-center text-brand-700 dark:text-brand-300 font-semibold text-sm flex-shrink-0">
           {candidate.name?.charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-stone-900 truncate">{candidate.name}</h3>
+          <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">{candidate.name}</h3>
           <Badge variant={STATUS_VARIANT[candidate.status] || 'default'} size="sm">
             {candidate.status || 'Active'}
           </Badge>
         </div>
       </div>
       <div className="flex items-center gap-0.5 flex-shrink-0">
-        <button onClick={onTimeline} aria-label="View timeline" className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors">
-          <Clock className="w-3.5 h-3.5 text-stone-500" />
+        <button onClick={onTimeline} aria-label="View timeline" className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors">
+          <Clock className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
         </button>
-        <button onClick={onEdit} aria-label="Edit candidate" className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors">
-          <Edit2 className="w-3.5 h-3.5 text-stone-500" />
+        <button onClick={onEdit} aria-label="Edit candidate" className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors">
+          <Edit2 className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
         </button>
-        <button onClick={onDeleteIntent} aria-label="Delete candidate" className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
-          <Trash2 className="w-3.5 h-3.5 text-red-500" />
+        <button onClick={onDeleteIntent} aria-label="Delete candidate" className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors">
+          <Trash2 className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
         </button>
       </div>
     </div>
 
-    <div className="space-y-1.5 text-xs text-stone-500 mb-3">
+    <div className="space-y-1.5 text-xs text-stone-500 dark:text-stone-400 mb-3">
       {candidate.email && (
         <div className="flex items-center gap-2 truncate">
           <Mail className="w-3.5 h-3.5 flex-shrink-0" />
@@ -206,18 +206,18 @@ const CandidateCard = ({ candidate, confirmDelete, onEdit, onDeleteIntent, onDel
           <Badge key={i} variant="info" size="sm">{skill}</Badge>
         ))}
         {candidate.skills.length > 4 && (
-          <span className="text-xs text-stone-400">+{candidate.skills.length - 4}</span>
+          <span className="text-xs text-stone-400 dark:text-stone-500">+{candidate.skills.length - 4}</span>
         )}
       </div>
     )}
 
     {confirmDelete && (
-      <div className="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center gap-3 p-4">
-        <div className="flex items-center gap-2 text-stone-700">
-          <AlertTriangle className="w-5 h-5 text-amber-500" />
+      <div className="absolute inset-0 bg-white/95 dark:bg-stone-900/95 rounded-xl flex flex-col items-center justify-center gap-3 p-4">
+        <div className="flex items-center gap-2 text-stone-700 dark:text-stone-300">
+          <AlertTriangle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
           <span className="text-sm font-medium">Delete this candidate?</span>
         </div>
-        <p className="text-xs text-stone-500 text-center">This cannot be undone.</p>
+        <p className="text-xs text-stone-500 dark:text-stone-400 text-center">This cannot be undone.</p>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onDeleteCancel}>Cancel</Button>
           <Button variant="danger" size="sm" onClick={onDeleteConfirm}>Delete</Button>
@@ -325,7 +325,7 @@ const CandidateModal = ({ open, candidate, onClose, onSuccess }) => {
           hint="Used for AI matching score"
         />
         <div>
-          <label className="block text-sm font-medium text-stone-700 mb-1.5">Resume (PDF only)</label>
+          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">Resume (PDF only)</label>
           <ResumeUploader
             onFileSelect={file => setFormData(prev => ({ ...prev, resume: file }))}
             existingFile={candidate?.resume}
@@ -369,7 +369,7 @@ const CandidateTimelineModal = ({ candidate, onClose }) => {
           {applications.map(app => (
             <div key={app._id}>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-medium text-stone-800">
+                <span className="text-sm font-medium text-stone-800 dark:text-stone-200">
                   {app.jobId?.title || app.job?.title || 'Unknown Job'}
                 </span>
                 <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>

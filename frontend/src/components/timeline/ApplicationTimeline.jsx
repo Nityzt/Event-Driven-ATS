@@ -45,18 +45,18 @@ const ApplicationTimeline = ({ applicationId }) => {
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-sm font-semibold text-stone-800 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-stone-500" />
+        <h2 className="text-sm font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-2">
+          <Activity className="w-4 h-4 text-stone-500 dark:text-stone-400" />
           Application Timeline
         </h2>
         <div className="flex items-center gap-1.5">
-          <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-stone-300'}`} />
-          <span className="text-xs text-stone-500">{isConnected ? 'Live' : 'Offline'}</span>
+          <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-stone-300 dark:bg-stone-600'}`} />
+          <span className="text-xs text-stone-500 dark:text-stone-400">{isConnected ? 'Live' : 'Offline'}</span>
         </div>
       </div>
 
       {events.length === 0 ? (
-        <div className="text-center py-10 text-sm text-stone-400">
+        <div className="text-center py-10 text-sm text-stone-400 dark:text-stone-500">
           No timeline events yet
         </div>
       ) : (

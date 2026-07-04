@@ -38,7 +38,7 @@ export function StatCardSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-white rounded-xl border border-stone-200 shadow-card p-5">
+        <div key={i} className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 shadow-card p-5">
           <div className="flex items-center justify-between mb-3">
             <Skeleton variant="rect" className="h-4 w-24" />
             <Skeleton variant="circle" className="w-10 h-10" />
@@ -55,7 +55,7 @@ export function JobCardSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-white rounded-xl border border-stone-200 shadow-card p-5">
+        <div key={i} className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 shadow-card p-5">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
               <Skeleton variant="rect" className="h-5 w-48 mb-2" />
@@ -79,7 +79,7 @@ export function CandidateCardSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="bg-white rounded-xl border border-stone-200 shadow-card p-5">
+        <div key={i} className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 shadow-card p-5">
           <div className="flex items-center gap-3 mb-3">
             <Skeleton variant="circle" className="w-10 h-10" />
             <div className="flex-1">

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { applicationsAPI, candidatesAPI, jobsAPI } from '../api/index';
 import Badge, { stageToBadgeVariant } from './ui/Badge';
 import Spinner from './ui/Spinner';
+import { ThemeToggleIcon } from './ui/ThemeToggle';
 import { timeAgo } from '../lib/utils';
 
 export const Navbar = ({ setSidebarOpen }) => {
@@ -77,14 +78,14 @@ export const Navbar = ({ setSidebarOpen }) => {
   const initial = user?.name?.charAt(0).toUpperCase() || 'U';
 
   return (
-    <header className="bg-white border-b border-stone-200 px-4 lg:px-6 h-16 flex items-center flex-shrink-0">
+    <header className="bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 px-4 lg:px-6 h-16 flex items-center flex-shrink-0">
       <div className="flex items-center gap-3 w-full">
 
         {/* Mobile hamburger */}
         <button
           onClick={() => setSidebarOpen(true)}
           aria-label="Open navigation menu"
-          className="lg:hidden p-2 -ml-1 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors flex-shrink-0"
+          className="lg:hidden p-2 -ml-1 text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors flex-shrink-0"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -92,7 +93,7 @@ export const Navbar = ({ setSidebarOpen }) => {
         {/* Search */}
         <div className="flex-1 max-w-lg relative" ref={searchRef}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
@@ -101,7 +102,7 @@ export const Navbar = ({ setSidebarOpen }) => {
               onFocus={() => hasResults && setShowSearchDropdown(true)}
               placeholder="Search candidates, jobs…"
               aria-label="Search candidates and jobs"
-              className="w-full pl-9 pr-4 py-2 text-sm bg-surface-subtle border border-stone-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors"
+              className="w-full pl-9 pr-4 py-2 text-sm bg-surface-subtle dark:bg-stone-900 border border-stone-300 dark:border-stone-700 rounded-xl focus:bg-white dark:focus:bg-stone-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors"
             />
             {searching && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -111,26 +112,26 @@ export const Navbar = ({ setSidebarOpen }) => {
           </div>
 
           {showSearchDropdown && (
-            <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-stone-200 rounded-xl shadow-modal z-50 max-h-80 overflow-y-auto animate-slide-up">
+            <div className="absolute top-full mt-1 left-0 right-0 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl shadow-modal z-50 max-h-80 overflow-y-auto animate-slide-up">
               {!hasResults ? (
-                <p className="px-4 py-6 text-sm text-stone-400 text-center">No results for "{searchQuery}"</p>
+                <p className="px-4 py-6 text-sm text-stone-400 dark:text-stone-500 text-center">No results for "{searchQuery}"</p>
               ) : (
                 <>
                   {searchResults.candidates.length > 0 && (
                     <div>
-                      <p className="px-4 py-2 text-2xs font-semibold text-stone-400 uppercase tracking-wider border-b border-stone-100">Candidates</p>
+                      <p className="px-4 py-2 text-2xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider border-b border-stone-100 dark:border-stone-800">Candidates</p>
                       {searchResults.candidates.map(c => (
                         <button
                           key={c._id}
                           onClick={() => { navigate('/candidates'); setShowSearchDropdown(false); setSearchQuery(''); }}
-                          className="w-full px-4 py-2.5 text-left hover:bg-stone-50 flex items-center gap-3 transition-colors"
+                          className="w-full px-4 py-2.5 text-left hover:bg-stone-50 dark:hover:bg-stone-800 flex items-center gap-3 transition-colors"
                         >
-                          <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 text-xs font-semibold flex-shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900/40 flex items-center justify-center text-brand-700 dark:text-brand-300 text-xs font-semibold flex-shrink-0">
                             {c.name?.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-stone-800">{c.name}</p>
-                            <p className="text-xs text-stone-400">{c.email}</p>
+                            <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{c.name}</p>
+                            <p className="text-xs text-stone-400 dark:text-stone-500">{c.email}</p>
                           </div>
                         </button>
                       ))}
@@ -138,17 +139,17 @@ export const Navbar = ({ setSidebarOpen }) => {
                   )}
                   {searchResults.jobs.length > 0 && (
                     <div>
-                      <p className="px-4 py-2 text-2xs font-semibold text-stone-400 uppercase tracking-wider border-b border-stone-100">Jobs</p>
+                      <p className="px-4 py-2 text-2xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider border-b border-stone-100 dark:border-stone-800">Jobs</p>
                       {searchResults.jobs.map(j => (
                         <button
                           key={j._id}
                           onClick={() => { navigate('/jobs'); setShowSearchDropdown(false); setSearchQuery(''); }}
-                          className="w-full px-4 py-2.5 text-left hover:bg-stone-50 flex items-center gap-3 transition-colors"
+                          className="w-full px-4 py-2.5 text-left hover:bg-stone-50 dark:hover:bg-stone-800 flex items-center gap-3 transition-colors"
                         >
-                          <Briefcase className="w-4 h-4 text-stone-400 flex-shrink-0" />
+                          <Briefcase className="w-4 h-4 text-stone-400 dark:text-stone-500 flex-shrink-0" />
                           <div>
-                            <p className="text-sm font-medium text-stone-800">{j.title}</p>
-                            <p className="text-xs text-stone-400">{j.location} · {j.seniority}</p>
+                            <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{j.title}</p>
+                            <p className="text-xs text-stone-400 dark:text-stone-500">{j.location} · {j.seniority}</p>
                           </div>
                         </button>
                       ))}
@@ -163,12 +164,15 @@ export const Navbar = ({ setSidebarOpen }) => {
         {/* Right section */}
         <div className="flex items-center gap-1 ml-auto">
 
+          {/* Theme toggle */}
+          <ThemeToggleIcon />
+
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setShowNotifications(v => !v)}
               aria-label="View recent activity"
-              className="relative p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
+              className="relative p-2 text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors"
             >
               <Bell className="w-5 h-5" />
               {recentApps.length > 0 && (
@@ -177,29 +181,29 @@ export const Navbar = ({ setSidebarOpen }) => {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border border-stone-200 rounded-xl shadow-modal z-50 animate-slide-up">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
-                  <h3 className="text-sm font-semibold text-stone-800">Recent Activity</h3>
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl shadow-modal z-50 animate-slide-up">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100 dark:border-stone-800">
+                  <h3 className="text-sm font-semibold text-stone-800 dark:text-stone-200">Recent Activity</h3>
                   <button
                     onClick={() => setShowNotifications(false)}
                     aria-label="Close notifications"
-                    className="text-stone-400 hover:text-stone-600 p-1 rounded transition-colors"
+                    className="text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 p-1 rounded transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
                 {recentApps.length === 0 ? (
-                  <p className="px-4 py-6 text-sm text-stone-400 text-center">No recent activity</p>
+                  <p className="px-4 py-6 text-sm text-stone-400 dark:text-stone-500 text-center">No recent activity</p>
                 ) : (
-                  <div className="divide-y divide-stone-50">
+                  <div className="divide-y divide-stone-50 dark:divide-stone-800">
                     {recentApps.map(app => (
                       <div key={app._id} className="px-4 py-3">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-stone-800 truncate">
+                            <p className="text-sm font-medium text-stone-800 dark:text-stone-200 truncate">
                               {app.candidateId?.name || app.candidate?.name || 'Unknown'}
                             </p>
-                            <p className="text-xs text-stone-400 truncate">
+                            <p className="text-xs text-stone-400 dark:text-stone-500 truncate">
                               {app.jobId?.title || app.job?.title || 'Unknown Job'}
                             </p>
                           </div>
@@ -207,15 +211,15 @@ export const Navbar = ({ setSidebarOpen }) => {
                             {app.stage}
                           </Badge>
                         </div>
-                        <p className="text-xs text-stone-400 mt-1">{timeAgo(app.createdAt)}</p>
+                        <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">{timeAgo(app.createdAt)}</p>
                       </div>
                     ))}
                   </div>
                 )}
-                <div className="px-4 py-2.5 border-t border-stone-100">
+                <div className="px-4 py-2.5 border-t border-stone-100 dark:border-stone-800">
                   <button
                     onClick={() => { navigate('/applications'); setShowNotifications(false); }}
-                    className="text-xs text-brand-600 hover:text-brand-700 font-medium transition-colors"
+                    className="text-xs text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors"
                   >
                     View all applications →
                   </button>
@@ -228,7 +232,7 @@ export const Navbar = ({ setSidebarOpen }) => {
           <button
             onClick={() => navigate('/profile')}
             aria-label="Go to profile settings"
-            className="hidden sm:inline-flex items-center p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
+            className="hidden sm:inline-flex items-center p-2 text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors"
           >
             <Settings className="w-5 h-5" />
           </button>
@@ -239,31 +243,31 @@ export const Navbar = ({ setSidebarOpen }) => {
               onClick={() => setShowUserMenu(!showUserMenu)}
               aria-label="Open user menu"
               aria-expanded={showUserMenu}
-              className="flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 hover:bg-stone-100 rounded-lg transition-colors ml-1"
+              className="flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors ml-1"
             >
               <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                 {initial}
               </div>
               <div className="text-left hidden md:block">
-                <p className="text-sm font-medium text-stone-800 leading-tight">{user?.name || 'User'}</p>
-                <p className="text-xs text-stone-400 leading-tight">{user?.role || 'Member'}</p>
+                <p className="text-sm font-medium text-stone-800 dark:text-stone-200 leading-tight">{user?.name || 'User'}</p>
+                <p className="text-xs text-stone-400 dark:text-stone-500 leading-tight">{user?.role || 'Member'}</p>
               </div>
-              <ChevronDown className="w-4 h-4 text-stone-400" />
+              <ChevronDown className="w-4 h-4 text-stone-400 dark:text-stone-500" />
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-modal border border-stone-200 py-1 z-50 animate-slide-up">
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-stone-900 rounded-xl shadow-modal border border-stone-200 dark:border-stone-800 py-1 z-50 animate-slide-up">
                 <button
                   onClick={() => { setShowUserMenu(false); navigate('/profile'); }}
-                  className="w-full px-4 py-2.5 text-left text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-2 transition-colors"
+                  className="w-full px-4 py-2.5 text-left text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 flex items-center gap-2 transition-colors"
                 >
                   <User className="w-4 h-4" />
                   Profile
                 </button>
-                <div className="border-t border-stone-100 my-1" />
+                <div className="border-t border-stone-100 dark:border-stone-800 my-1" />
                 <button
                   onClick={handleLogout}
-                  className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                  className="w-full px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign out

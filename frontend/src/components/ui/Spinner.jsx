@@ -10,7 +10,7 @@ const sizes = {
 export default function Spinner({ size = 'md', className }) {
   return (
     <svg
-      className={cn('animate-spin text-brand-600', sizes[size], className)}
+      className={cn('animate-spin text-brand-600 dark:text-brand-400', sizes[size], className)}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
