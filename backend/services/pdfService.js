@@ -132,9 +132,11 @@ exports.extractSkills = (text) => {
 // Mock virus-check stub for resume uploads
 exports.virusCheck = async (filePath) => {
   console.log(`[VirusCheck] Running malware scan on file: ${filePath}`);
-  // In a real production system, this would integration with scanner (e.g. ClamAV, VirusTotal).
-  // Returns true if safe, false if infected. We mock a clean file.
-  const isClean = true;
+  // Stub scanner. A real impl would call ClamAV / VirusTotal and return true if
+  // safe, false if infected. To make the rejection path demoable, any file whose
+  // name contains "eicar" (the standard antivirus test string) is treated as infected.
+  const path = require('path');
+  const isClean = !/eicar/i.test(path.basename(filePath || ''));
   console.log(`[VirusCheck] Malware scan completed. Safe: ${isClean}`);
   return isClean;
 };

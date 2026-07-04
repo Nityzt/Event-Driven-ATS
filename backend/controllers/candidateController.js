@@ -3,6 +3,11 @@ const AuditLog = require('../models/AuditLog');
 const { extractTextFromPDF, extractSkills, virusCheck } = require('../services/pdfService');
 const eventEmitter = require('../services/eventEmitter');
 
+// Escape user input before interpolating it into a RegExp.
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function parseArrayField(value, fallback = []) {
   if (value === undefined || value === null || value === '') return fallback;
   if (Array.isArray(value)) return value;
@@ -43,7 +48,7 @@ exports.getCandidates = async (req, res) => {
     const query = {
       ...(search && { $text: { $search: search } }),
       ...(status && { status }),
-      ...(location && { location }),
+      ...(location && { location: new RegExp(`^${escapeRegex(location)}$`, 'i') }),
       ...(seniority && { seniority }),
     };
 

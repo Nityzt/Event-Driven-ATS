@@ -119,6 +119,11 @@ async function executeRun(runId, workflow, context) {
             text:    cfg.body || cfg.message || '',
             html:    cfg.body || cfg.message || ''
           });
+          // emailService.sendEmail() resolves with { success:false } instead of throwing —
+          // surface that as a failed step rather than logging a misleading "Email sent".
+          if (!result || result.success === false) {
+            throw new Error(result?.error || 'Email send failed');
+          }
           metrics.emails_sent++;
           const preview = result?.previewUrl ? ` | Preview: ${result.previewUrl}` : '';
           pushLog(run, i, 'completed', `Email sent to ${to}${preview}`);
@@ -131,7 +136,7 @@ async function executeRun(runId, workflow, context) {
             applicationId: run.applicationId?.toString(),
             correlationId: run._id.toString()
           });
-          metrics.sms_sent++;
+          // metrics.sms_sent is incremented inside smsService.send(); don't double-count here.
           pushLog(run, i, 'completed', `SMS sent to ${to}`);
           break;
         }

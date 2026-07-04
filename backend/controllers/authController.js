@@ -21,7 +21,9 @@ const generateRefreshToken = (userId) => {
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
+    // SECURITY: never trust a client-supplied role on public registration.
+    // Self-registered users are always Viewers; Admins assign elevated roles.
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -37,7 +39,7 @@ exports.register = async (req, res) => {
       name,
       email,
       password, // Will be hashed by pre-save hook
-      role: role || 'Viewer'
+      role: 'Viewer'
     });
 
     // Generate tokens

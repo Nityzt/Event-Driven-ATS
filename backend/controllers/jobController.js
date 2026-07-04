@@ -2,6 +2,11 @@ const Job = require('../models/Job');
 const AuditLog = require('../models/AuditLog');
 const eventEmitter = require('../services/eventEmitter');
 
+// Escape user input before interpolating it into a RegExp.
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function logAudit({ user, action, resource, resourceId, changes, req }) {
   return AuditLog.create({
     user,
@@ -22,7 +27,7 @@ exports.getJobs = async (req, res) => {
     const query = {
       ...(search   && { $text: { $search: search } }),
       ...(status   && { status }),
-      ...(location && { location: new RegExp(location, 'i') }),
+      ...(location && { location: new RegExp(`^${escapeRegex(location)}$`, 'i') }),
       ...(seniority && { seniority }),
     };
     

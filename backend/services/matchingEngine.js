@@ -47,10 +47,12 @@ class MatchingEngine {
   constructor() {
     // Configurable weights (should sum to 100)
     this.weights = {
-      skills: 50,
+      skills: 60,       // absorbed education's former 10% (no education data model yet)
       experience: 30,
       location: 10,
-      education: 10
+      education: 0      // neither Candidate nor Job stores education, so it always
+                        // returned 100 and gave every candidate a free +10. Kept at 0
+                        // until an education field exists, so it can't inflate scores.
     };
 
     // Score thresholds for match quality
@@ -172,15 +174,11 @@ class MatchingEngine {
     }
 
     if (candidateYears >= requiredYears) {
-      // Candidate meets or exceeds requirement
-      // Give bonus for more experience, but cap to avoid over-qualification penalty
-      const bonus = Math.min(20, (candidateYears - requiredYears) * 2);
-      return Math.min(100, 100 + bonus);
-    } else {
-      // Candidate has less experience than required
-      // Linear scaling: 0 years = 0%, required years = 100%
-      return (candidateYears / requiredYears) * 100;
+      // Meets or exceeds the requirement.
+      return 100;
     }
+    // Less experience than required → linear scaling (0 years = 0%, required years = 100%).
+    return (candidateYears / requiredYears) * 100;
   }
 
   /**

@@ -4,6 +4,11 @@ const Match = require('../models/Match');
 const matchingEngine = require('../services/matchingEngine');
 const { authenticate } = require('../middleware/auth');
 
+// Escape user input before interpolating it into a RegExp.
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function serializeMatch(match) {
   if (!match) return match;
   const data = typeof match.toObject === 'function' ? match.toObject({ virtuals: true }) : match;
@@ -141,7 +146,7 @@ router.get('/job/:jobId', async (req, res) => {
       candidateIdSets.push(results.map(r => String(r._id)));
     }
     if (location) {
-      const results = await Candidate.find({ location }, { _id: 1 }).lean();
+      const results = await Candidate.find({ location: new RegExp(`^${escapeRegex(location)}$`, 'i') }, { _id: 1 }).lean();
       if (results.length === 0) {
         return res.json({ success: true, data: { total: 0, matches: [] } });
       }
