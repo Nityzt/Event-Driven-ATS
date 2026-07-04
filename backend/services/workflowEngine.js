@@ -43,13 +43,20 @@ function logStateChange(run, before, after) {
   }).catch(err => console.error('[WorkflowEngine] AuditLog error:', err));
 }
 
-function pushLog(run, step, status, message, error = null) {
+const STEP_LABELS = { sendEmail: 'Email', sendSMS: 'SMS', wait: 'Wait', webhook: 'Webhook' };
+const STATUS_VERBS = { running: 'Started', completed: 'Completed', failed: 'Failed', retrying: 'Retrying' };
+
+function pushLog(run, step, status, message, error = null, stepType = null) {
   const correlationId = run.correlationId;
   run.logs.push({ step, status, message, error, correlationId, createdAt: new Date() });
+  const label = STEP_LABELS[stepType] || 'Workflow';
+  const verb = STATUS_VERBS[status] || status;
   eventEmitter.emit(`run:log:${run.applicationId}`, {
     runId: run._id,
     workflowId: run.workflowId,
     step,
+    stepType,
+    title: `${label} ${verb}`,
     status,
     message,
     error,
@@ -66,7 +73,7 @@ async function callWebhook(url, method, payload, run, stepIndex) {
     if (attempt > 0) {
       await new Promise(r => setTimeout(r, delays[attempt]));
       metrics.steps_retried++;
-      pushLog(run, stepIndex, 'retrying', `Webhook retry attempt ${attempt + 1}/${delays.length}`);
+      pushLog(run, stepIndex, 'retrying', `Webhook retry attempt ${attempt + 1}/${delays.length}`, null, 'webhook');
     }
 
     try {
@@ -105,7 +112,7 @@ async function executeRun(runId, workflow, context) {
     const step = steps[i];
     const cfg = resolveConfig(step.config, context);
 
-    pushLog(run, i, 'running', `Step ${i + 1}: ${step.type}`);
+    pushLog(run, i, 'running', `Step ${i + 1}: ${step.type}`, null, step.type);
     run.stepPointer = i;
     await run.save();
 
@@ -126,7 +133,8 @@ async function executeRun(runId, workflow, context) {
           }
           metrics.emails_sent++;
           const preview = result?.previewUrl ? ` | Preview: ${result.previewUrl}` : '';
-          pushLog(run, i, 'completed', `Email sent to ${to}${preview}`);
+          const mocked = result?.mocked ? ' (mocked — see server logs)' : '';
+          pushLog(run, i, 'completed', `Email sent to ${to}${preview}${mocked}`, null, 'sendEmail');
           break;
         }
 
@@ -137,7 +145,7 @@ async function executeRun(runId, workflow, context) {
             correlationId: run._id.toString()
           });
           // metrics.sms_sent is incremented inside smsService.send(); don't double-count here.
-          pushLog(run, i, 'completed', `SMS sent to ${to}`);
+          pushLog(run, i, 'completed', `SMS sent to ${to}`, null, 'sendSMS');
           break;
         }
 
@@ -155,7 +163,7 @@ async function executeRun(runId, workflow, context) {
           run.state = 'paused';
           run.stepPointer = i + 1; // continue from next step on resume
           await run.save();
-          pushLog(run, i, 'completed', `Waiting ${cfg.duration} ${cfg.unit || 'hours'}`);
+          pushLog(run, i, 'completed', `Waiting ${cfg.duration} ${cfg.unit || 'hours'}`, null, 'wait');
 
           await logStateChange(run, 'running', 'paused');
 
@@ -166,7 +174,7 @@ async function executeRun(runId, workflow, context) {
           let webhookPayload = cfg.payload;
           try { webhookPayload = JSON.parse(cfg.payload); } catch (_) {}
           await callWebhook(cfg.url, cfg.method, webhookPayload, run, i);
-          pushLog(run, i, 'completed', `Webhook called: ${cfg.url}`);
+          pushLog(run, i, 'completed', `Webhook called: ${cfg.url}`, null, 'webhook');
           break;
         }
 
@@ -177,7 +185,7 @@ async function executeRun(runId, workflow, context) {
       const oldState = run.state;
       run.state = 'failed';
       run.failedAt = new Date();
-      pushLog(run, i, 'failed', `Step ${i + 1} failed: ${err.message}`, err.message);
+      pushLog(run, i, 'failed', `Step ${i + 1} failed: ${err.message}`, err.message, step.type);
       await run.save();
 
       await logStateChange(run, oldState, 'failed');
