@@ -34,7 +34,7 @@ docker-compose exec backend node scripts/seed.js       # load demo data (first r
 Open **http://localhost** and log in as `recruiter@ats.com` / `recruiter123`, then:
 
 1. **Workflows → New** — drag `sendEmail`, `wait`, and `webhook` steps onto the canvas; hit **Preview** to dry-run with sample data.
-2. **Applications → New** — link a candidate to a job. This fires `Application.created` and kicks off your workflow.
+2. **Applications** — change an existing application's stage (dropdown in the row). This fires `Stage.changed` and kicks off a matching workflow. (Creating a brand-new application is API-only for now — `POST /api/applications` — there's no "New Application" button in the UI yet.)
 3. Open the application's **timeline** — watch each step execute live over SSE.
 4. **Workflows → Runs** — pause / resume / cancel the run mid-flight.
 5. **Matches** — see candidates scored against the job with a full breakdown.
@@ -120,7 +120,7 @@ event-driven-ats/
 │   │   ├── jobs.js
 │   │   ├── matches.js
 │   │   ├── runs.js            # pause/resume/cancel
-│   │   └── workflows.js       # CRUD + preview + agenda mgmt + manual triggers
+│   │   └── workflows.js       # CRUD + preview + agenda mgmt
 │   ├── scripts/
 │   │   └── seed.js            # 50 candidates, 10 jobs, 3 workflows, 2 users
 │   ├── services/
@@ -132,8 +132,7 @@ event-driven-ats/
 │   │   ├── pdfService.js      # PDF text extraction
 │   │   ├── smsService.js      # mock SMS: console + AuditLog
 │   │   ├── workflowEngine.js  # trigger, executeRun, previewWorkflow
-│   │   ├── workflowJobs.js    # Agenda job definitions (incl. resume-run)
-│   │   └── workflowListener.js
+│   │   └── workflowJobs.js    # Agenda job definitions — resume-run only
 │   ├── tests/
 │   │   ├── api.test.js        # 22 integration tests
 │   │   └── setup.js           # sets env vars before server.js loads
@@ -591,7 +590,7 @@ To change `JWT_SECRET` for Docker: set it in a `.env` file at the project root (
    EMAIL_PASS=re_xxxxxxxxxxxxxxxxxxxx
    EMAIL_FROM=TalentBay <onboarding@resend.dev>
    ```
-   `onboarding@resend.dev` works in Resend test-mode without domain verification — emails go to the **Resend dashboard** for inspection. For real delivery to any inbox, verify a custom domain in the Resend console and update `EMAIL_FROM`.
+   The app detects `EMAIL_HOST=smtp.resend.com` and sends through Resend's **HTTPS API** instead of SMTP — this is what makes email work on hosts like Render that block outbound SMTP ports (see the deployment note below). `onboarding@resend.dev` works without domain verification, but only for delivery to **your own Resend account email** — sending to anyone else 403s and falls back to a mock (logged, not a hard failure). For real delivery to arbitrary candidate inboxes, verify a custom domain in the Resend console and update `EMAIL_FROM`.
 
 ### Email — Gmail App Password (personal demo)
 
@@ -666,6 +665,8 @@ Recommended stack: **MongoDB Atlas** (database) + **Render** (backend) + **Verce
 5. Click **Deploy** — Render gives you a URL like `https://talentbay-api.onrender.com`
 
 > **Note:** Free Render services spin down after 15 minutes of inactivity. First request after idle takes ~30 seconds to cold-start. Acceptable for a demo; upgrade to the $7/month plan to keep it warm.
+
+> **Note on email:** Render's free tier blocks outbound SMTP (ports 25/465/587) as of Sept 2025. `emailService.js` works around this by sending through Resend's HTTPS API instead of SMTP whenever `EMAIL_HOST=smtp.resend.com` — falls back to a logged mock send if that fails too (e.g. Resend's sandbox restriction: unverified accounts can only deliver to their own address). Non-Resend SMTP (Ethereal, Gmail) still uses nodemailer directly and isn't affected by the Render block since it's for local dev. SMS via Twilio was never affected (HTTPS API, not SMTP).
 
 ### Step 3 — Frontend on Vercel
 
