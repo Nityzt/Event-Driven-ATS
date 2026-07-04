@@ -51,7 +51,7 @@ const TriggerModal = ({ app, onClose, onTriggered }) => {
     <Modal
       open
       onClose={onClose}
-      title={`Trigger Workflow — ${app.candidate?.name || 'Application'}`}
+      title={`Trigger Workflow — ${app.candidateId?.name || 'Application'}`}
       size="md"
       footer={
         <>
@@ -103,7 +103,7 @@ const TriggerModal = ({ app, onClose, onTriggered }) => {
 // ── shared cells (reused by the desktop table and the mobile cards) ─────────────
 
 function CandidateIdentity({ app }) {
-  const name = app.candidate?.name || 'Unknown';
+  const name = app.candidateId?.name || 'Unknown';
   return (
     <div className="flex items-center gap-2.5 min-w-0">
       <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900/40 flex items-center justify-center text-brand-700 dark:text-brand-300 text-xs font-semibold flex-shrink-0">
@@ -111,7 +111,7 @@ function CandidateIdentity({ app }) {
       </div>
       <div className="min-w-0">
         <p className="text-sm font-medium text-stone-800 dark:text-stone-200 truncate">{name}</p>
-        <p className="text-xs text-stone-400 dark:text-stone-500 truncate">{app.candidate?.email}</p>
+        <p className="text-xs text-stone-400 dark:text-stone-500 truncate">{app.candidateId?.email}</p>
       </div>
     </div>
   );
@@ -247,7 +247,7 @@ const Applications = () => {
                   {applications.map(app => (
                     <tr key={app._id} className="hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
                       <td className="px-6 py-4"><CandidateIdentity app={app} /></td>
-                      <td className="px-6 py-4 text-sm text-stone-700 dark:text-stone-300">{app.job?.title || 'Unknown'}</td>
+                      <td className="px-6 py-4 text-sm text-stone-700 dark:text-stone-300">{app.jobId?.title || 'Unknown'}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>
@@ -276,7 +276,7 @@ const Applications = () => {
                   <Badge variant={stageToBadgeVariant(app.stage)} size="sm">{app.stage}</Badge>
                 </div>
                 <div className="flex items-center justify-between gap-3 text-xs text-stone-500 dark:text-stone-400">
-                  <span className="truncate">{app.job?.title || 'Unknown'}</span>
+                  <span className="truncate">{app.jobId?.title || 'Unknown'}</span>
                   <span className="flex-shrink-0 tabular-nums">{new Date(app.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2 pt-3 border-t border-stone-100 dark:border-stone-800">
@@ -292,7 +292,7 @@ const Applications = () => {
       <Modal
         open={showTimeline}
         onClose={() => setShowTimeline(false)}
-        title={selectedApp ? `Timeline — ${selectedApp.candidate?.name || 'Application'}` : 'Application Timeline'}
+        title={selectedApp ? `Timeline — ${selectedApp.candidateId?.name || 'Application'}` : 'Application Timeline'}
         size="xl"
       >
         {selectedApp && <ErrorBoundary><ApplicationTimeline applicationId={selectedApp._id} /></ErrorBoundary>}
