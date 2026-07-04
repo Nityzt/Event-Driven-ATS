@@ -90,6 +90,9 @@ exports.getApplication = async (req, res) => {
   }
 };
 
+const STEP_LABELS = { sendEmail: 'Email', sendSMS: 'SMS', wait: 'Wait', webhook: 'Webhook' };
+const STATUS_VERBS = { running: 'Started', completed: 'Completed', failed: 'Failed', paused: 'Paused' };
+
 exports.getApplicationTimeline = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id)
@@ -97,19 +100,50 @@ exports.getApplicationTimeline = async (req, res) => {
       .populate('candidateId', 'name')
       .populate('jobId', 'title')
       .populate('timeline.changedBy', 'name email');
-    
+
     if (!application) {
       return res.status(404).json({
         success: false,
         error: 'Application not found'
       });
     }
-    
+
     const runs = await Run.find({ applicationId: application._id })
-      .populate('workflowId', 'name')
+      .populate('workflowId', 'name steps')
       .select('workflowId state logs createdAt updatedAt')
       .sort({ createdAt: -1 });
-    
+
+    const stageEvents = application.timeline.map(entry => ({
+      _id: entry._id,
+      type: 'stage.changed',
+      title: `Stage: ${entry.stage}`,
+      message: entry.changedBy?.name ? `Changed by ${entry.changedBy.name}` : null,
+      status: 'completed',
+      createdAt: entry.createdAt,
+    }));
+
+    const runEvents = runs.flatMap(run =>
+      run.logs.map(log => {
+        const stepType = run.workflowId?.steps?.[log.step]?.type;
+        const label = STEP_LABELS[stepType] || 'Step';
+        const verb = STATUS_VERBS[log.status] || log.status;
+        return {
+          _id: log._id,
+          type: 'run_log',
+          stepType,
+          title: `${run.workflowId?.name || 'Workflow'} — ${label} ${verb}`,
+          message: log.message,
+          error: log.error,
+          status: log.status,
+          createdAt: log.createdAt,
+        };
+      })
+    );
+
+    const events = [...stageEvents, ...runEvents].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
     res.json({
       success: true,
       data: {
@@ -119,11 +153,10 @@ exports.getApplicationTimeline = async (req, res) => {
           job: application.jobId,
           currentStage: application.stage
         },
-        timeline: application.timeline,
-        workflowRuns: runs
+        events
       }
     });
-    
+
   } catch (error) {
     console.error('Get timeline error:', error);
     res.status(500).json({
