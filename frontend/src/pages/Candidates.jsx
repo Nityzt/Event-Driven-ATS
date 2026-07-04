@@ -106,7 +106,7 @@ const Candidates = () => {
             <option>Mid</option>
             <option>Senior</option>
             <option>Lead</option>
-            <option>Principal</option>
+            <option>Executive</option>
           </Select>
         </div>
       </Card>
@@ -263,7 +263,11 @@ const CandidateModal = ({ open, candidate, onClose, onSuccess }) => {
     if (!validate()) return;
     setSaving(true);
     try {
-      const payload = { ...formData, skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean) };
+      const payload = {
+        ...formData,
+        skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
+      };
+      if (!payload.seniority) delete payload.seniority;
       if (candidate) {
         await candidatesAPI.update(candidate._id, payload);
         toast.success('Candidate updated');
@@ -315,7 +319,7 @@ const CandidateModal = ({ open, candidate, onClose, onSuccess }) => {
           <option>Mid</option>
           <option>Senior</option>
           <option>Lead</option>
-          <option>Principal</option>
+          <option>Executive</option>
         </Select>
         <Input
           label="Skills (comma-separated)"
