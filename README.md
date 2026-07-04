@@ -1,6 +1,46 @@
 # TalentBay — Event-Driven ATS
 
-A full-stack Applicant Tracking System built on the MERN stack, featuring a custom event-driven workflow automation engine with real-time Server-Sent Events, MongoDB-backed job scheduling via Agenda, JWT/RBAC authentication, a visual workflow builder, and a polished production-ready UI with a custom design system.
+> A full-stack Applicant Tracking System where recruiters automate hiring with **no-code workflows** — drag-and-drop rules that fire emails, SMS, and webhooks the moment an application is created or a candidate changes stage, with the execution streamed back live.
+
+Built on the MERN stack to demonstrate **event-driven architecture** end to end: a custom workflow engine, MongoDB-backed job scheduling, real-time Server-Sent Events, a skills-based matching algorithm, and a polished UI on a hand-built design system.
+
+<p>
+  <img alt="MERN" src="https://img.shields.io/badge/Stack-MERN-3d6347" />
+  <img alt="Express 5" src="https://img.shields.io/badge/Express-5-000" />
+  <img alt="MongoDB 7" src="https://img.shields.io/badge/MongoDB-7-47A248" />
+  <img alt="React 18" src="https://img.shields.io/badge/React-18-61DAFB" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-22%20passing-3d6347" />
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-compose-2496ED" />
+</p>
+
+---
+
+## Why this project is interesting
+
+- **A real workflow engine, not if-statements.** Triggers create `Run` records, steps execute sequentially with a `stepPointer`, `wait` steps actually pause the run and resume later via a scheduled job, webhooks retry with exponential backoff, and an idempotency guard prevents duplicate runs.
+- **Live execution you can watch.** Every workflow step streams to the application timeline over SSE — you see emails sent and webhooks fire in real time.
+- **Explainable matching.** Candidates are scored against jobs (skills / experience / location / education) with a stored breakdown, hard filters, and hygiene-skill bonuses — every score is auditable.
+- **Production hygiene.** JWT + refresh tokens, RBAC, rate limiting, input validation, correlation IDs threaded through audit logs, health/metrics endpoints, 22 integration tests, and one-command Docker.
+
+---
+
+## See it in 60 seconds
+
+```bash
+docker-compose up --build                              # MongoDB → backend → frontend
+docker-compose exec backend node scripts/seed.js       # load demo data (first run only)
+```
+
+Open **http://localhost** and log in as `recruiter@ats.com` / `recruiter123`, then:
+
+1. **Workflows → New** — drag `sendEmail`, `wait`, and `webhook` steps onto the canvas; hit **Preview** to dry-run with sample data.
+2. **Applications → New** — link a candidate to a job. This fires `Application.created` and kicks off your workflow.
+3. Open the application's **timeline** — watch each step execute live over SSE.
+4. **Workflows → Runs** — pause / resume / cancel the run mid-flight.
+5. **Matches** — see candidates scored against the job with a full breakdown.
+6. **Audit Logs** — every action, with before/after diffs and correlation IDs.
+
+> No Docker? See [Local Development](#option-b--local-development) below.
 
 ---
 
