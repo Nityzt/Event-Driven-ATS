@@ -21,7 +21,7 @@ const ApplicationTimeline = ({ applicationId }) => {
     setLoading(true);
     try {
       const response = await apiClient.get(`/applications/${applicationId}/timeline`);
-      setEvents(response.data?.timeline || response.timeline || []);
+      setEvents(response.data?.events || []);
     } catch (error) {
       console.error('Failed to fetch timeline:', error);
       setEvents([]);
