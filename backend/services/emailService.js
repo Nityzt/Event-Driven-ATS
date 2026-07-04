@@ -27,6 +27,9 @@ class EmailService {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
           },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
         });
         console.log('[Email] Using SMTP:', process.env.EMAIL_HOST, '/', process.env.EMAIL_USER);
       } else {
@@ -40,6 +43,9 @@ class EmailService {
             user: testAccount.user,
             pass: testAccount.pass,
           },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
         });
         console.log('[Email] Using Ethereal test account:', testAccount.user);
       }
