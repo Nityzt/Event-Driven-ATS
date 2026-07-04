@@ -36,7 +36,7 @@ const MatchingScreen = () => {
         sortBy,
       };
       const response = await apiClient.get(`/matches/job/${selectedJob._id}`, { params });
-      setMatches(response.matches || []);
+      setMatches(response.data?.matches || []);
     } catch (error) {
       console.error('Failed to fetch matches:', error);
       setMatches([]);
