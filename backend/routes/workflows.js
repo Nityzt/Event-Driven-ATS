@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const agenda = require('../config/agenda'); // direct import fixes the previous bug
+const agenda = require('../config/agenda'); // direct import (config singleton)
 const { authenticate, authorize } = require('../middleware/auth.js');
 const wfCtrl = require('../controllers/workflowController');
 
@@ -13,42 +13,16 @@ const workflowValidation = [
     .withMessage('Invalid step type')
 ];
 
-// ── CRUD ─────────────────────────────────────────────────────────────────────
+// ── Literal routes FIRST ───────────────────────────────────────────────────────
+// These must be registered before '/:id' so Express doesn't treat "preview",
+// "jobs" or "stats" as a workflow id (which previously 500'd on an ObjectId cast).
 
-router.get('/',    authenticate, wfCtrl.getWorkflows);
-router.get('/:id', authenticate, wfCtrl.getWorkflow);
-
-router.post('/',
-  authenticate,
-  authorize('Recruiter', 'Admin'),
-  workflowValidation,
-  wfCtrl.createWorkflow
-);
-
-router.put('/:id',
-  authenticate,
-  authorize('Recruiter', 'Admin'),
-  workflowValidation,
-  wfCtrl.updateWorkflow
-);
-
-router.delete('/:id',
-  authenticate,
-  authorize('Admin'),
-  wfCtrl.deleteWorkflow
-);
-
-router.patch('/:id/toggle',
-  authenticate,
-  authorize('Recruiter', 'Admin'),
-  wfCtrl.toggleWorkflow
-);
+router.get('/', authenticate, wfCtrl.getWorkflows);
 
 // POST /api/workflows/preview — dry-run step resolution
 router.post('/preview', authenticate, wfCtrl.previewRun);
 
-// ── Agenda job management ─────────────────────────────────────────────────────
-
+// Agenda job introspection (ops/debug)
 router.get('/jobs', authenticate, async (req, res) => {
   try {
     const jobs = await agenda.jobs({});
@@ -99,68 +73,34 @@ router.delete('/jobs/:jobId', authenticate, async (req, res) => {
   }
 });
 
-// ── Manual triggers ───────────────────────────────────────────────────────────
+// ── CRUD ───────────────────────────────────────────────────────────────────────
 
-router.post('/trigger/application-confirmation', authenticate, async (req, res) => {
-  try {
-    const { applicationId } = req.body;
-    if (!applicationId) return res.status(400).json({ error: 'applicationId required' });
-    await agenda.now('send-application-confirmation', { applicationId });
-    res.json({ message: 'Scheduled', applicationId });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+router.post('/',
+  authenticate,
+  authorize('Recruiter', 'Admin'),
+  workflowValidation,
+  wfCtrl.createWorkflow
+);
 
-router.post('/trigger/high-match-notification', authenticate, async (req, res) => {
-  try {
-    const { matchId } = req.body;
-    if (!matchId) return res.status(400).json({ error: 'matchId required' });
-    await agenda.now('notify-recruiter-high-match', { matchId });
-    res.json({ message: 'Scheduled', matchId });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+router.get('/:id', authenticate, wfCtrl.getWorkflow);
 
-router.post('/trigger/schedule-interview', authenticate, async (req, res) => {
-  try {
-    const { candidateId, jobId, interviewType, scheduleTime } = req.body;
-    if (!candidateId || !jobId) return res.status(400).json({ error: 'candidateId and jobId required' });
-    const when = scheduleTime || 'now';
-    if (when === 'now') {
-      await agenda.now('schedule-interview', { candidateId, jobId, interviewType: interviewType || 'phone-screen' });
-    } else {
-      await agenda.schedule(when, 'schedule-interview', { candidateId, jobId, interviewType: interviewType || 'phone-screen' });
-    }
-    res.json({ message: `Interview scheduled for ${when}`, candidateId, jobId });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+router.put('/:id',
+  authenticate,
+  authorize('Recruiter', 'Admin'),
+  workflowValidation,
+  wfCtrl.updateWorkflow
+);
 
-router.post('/trigger/rejection-email', authenticate, async (req, res) => {
-  try {
-    const { applicationId } = req.body;
-    if (!applicationId) return res.status(400).json({ error: 'applicationId required' });
-    await agenda.now('send-rejection-email', { applicationId });
-    res.json({ message: 'Scheduled', applicationId });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+router.delete('/:id',
+  authenticate,
+  authorize('Admin'),
+  wfCtrl.deleteWorkflow
+);
 
-router.post('/trigger/status-update', authenticate, async (req, res) => {
-  try {
-    const { applicationId, oldStatus, newStatus } = req.body;
-    if (!applicationId || !oldStatus || !newStatus) {
-      return res.status(400).json({ error: 'applicationId, oldStatus, and newStatus required' });
-    }
-    await agenda.now('send-status-update', { applicationId, oldStatus, newStatus });
-    res.json({ message: 'Scheduled', applicationId, oldStatus, newStatus });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+router.patch('/:id/toggle',
+  authenticate,
+  authorize('Recruiter', 'Admin'),
+  wfCtrl.toggleWorkflow
+);
 
 module.exports = router;

@@ -33,23 +33,19 @@ beforeAll(async () => {
     Match.deleteMany({})
   ]);
 
-  // Pre-seed an admin and recruiter
-  const adminRes = await request(app)
-    .post('/api/auth/register')
-    .send({ name: 'Admin', email: 'admin@test.com', password: 'password123', role: 'Admin' });
-  adminToken = adminRes.body.data?.accessToken;
-  adminId    = adminRes.body.data?.user?._id;
+  // Public registration is Viewer-only by design, so Admin/Recruiter accounts are
+  // created directly via the model and then logged in to obtain access tokens.
+  const admin = await User.create({ name: 'Admin', email: 'admin@test.com', password: 'password123', role: 'Admin' });
+  const recruiter = await User.create({ name: 'Recruiter', email: 'recruiter@test.com', password: 'password123', role: 'Recruiter' });
+  await User.create({ name: 'Viewer', email: 'viewer@test.com', password: 'password123', role: 'Viewer' });
+  adminId = admin._id;
+  recruiterId = recruiter._id;
 
-  const recruiterRes = await request(app)
-    .post('/api/auth/register')
-    .send({ name: 'Recruiter', email: 'recruiter@test.com', password: 'password123', role: 'Recruiter' });
-  recruiterToken = recruiterRes.body.data?.accessToken;
-  recruiterId    = recruiterRes.body.data?.user?._id;
-
-  const viewerRes = await request(app)
-    .post('/api/auth/register')
-    .send({ name: 'Viewer', email: 'viewer@test.com', password: 'password123', role: 'Viewer' });
-  viewerToken = viewerRes.body.data?.accessToken;
+  const login = (email) =>
+    request(app).post('/api/auth/login').send({ email, password: 'password123' });
+  adminToken     = (await login('admin@test.com')).body.data?.accessToken;
+  recruiterToken = (await login('recruiter@test.com')).body.data?.accessToken;
+  viewerToken    = (await login('viewer@test.com')).body.data?.accessToken;
 });
 
 afterAll(async () => {
@@ -343,7 +339,7 @@ describe('Workflow idempotency', () => {
     idempAppId = appRes.body.data?._id;
   });
 
-  test('17. Triggering the same stage change twice only creates one run for that transition', async () => {
+  test('18. Triggering the same stage change twice only creates one run for that transition', async () => {
     // First PATCH — stage changes from Applied → Screening, triggers Stage.changed workflow
     await request(app)
       .patch(`/api/applications/${idempAppId}`)
@@ -374,7 +370,7 @@ describe('Workflow idempotency', () => {
 
 // ── 8. Input validation ──────────────────────────────────────────────────────
 describe('Input validation', () => {
-  test('20. POST /api/jobs — missing title returns 400', async () => {
+  test('19. POST /api/jobs — missing title returns 400', async () => {
     const res = await request(app)
       .post('/api/jobs')
       .set('Authorization', `Bearer ${recruiterToken}`)
@@ -382,7 +378,7 @@ describe('Input validation', () => {
     expect(res.status).toBe(400);
   });
 
-  test('21. POST /api/candidates — missing email returns 400', async () => {
+  test('20. POST /api/candidates — missing email returns 400', async () => {
     const res = await request(app)
       .post('/api/candidates')
       .set('Authorization', `Bearer ${recruiterToken}`)
@@ -390,7 +386,7 @@ describe('Input validation', () => {
     expect(res.status).toBe(400);
   });
 
-  test('22. POST /api/applications — missing candidateId returns 400', async () => {
+  test('21. POST /api/applications — missing candidateId returns 400', async () => {
     const res = await request(app)
       .post('/api/applications')
       .set('Authorization', `Bearer ${recruiterToken}`)
@@ -401,7 +397,7 @@ describe('Input validation', () => {
 
 // ── 9. Rate limiting ─────────────────────────────────────────────────────────
 describe('Rate limiting', () => {
-  test('18. /api/auth rate limit eventually returns 429', async () => {
+  test('22. /api/auth rate limit eventually returns 429', async () => {
     let limited = false;
 
     for (let i = 0; i < 12; i++) {
