@@ -1,7 +1,11 @@
-import { Mail, MessageSquare, Clock, Webhook, CheckCircle, XCircle, PlayCircle, PauseCircle, AlertCircle } from 'lucide-react';
+import { Mail, MessageSquare, Clock, Webhook, CheckCircle, XCircle, PlayCircle, PauseCircle, AlertCircle, ArrowRightCircle } from 'lucide-react';
 
 const TimelineEvent = ({ event, isLast }) => {
   const getEventIcon = () => {
+    if (event.type === 'stage.changed') {
+      return <ArrowRightCircle className="w-5 h-5 text-brand-600 dark:text-brand-400" />;
+    }
+
     if (event.type?.includes('workflow')) {
       switch (event.status || event.type) {
         case 'started':
