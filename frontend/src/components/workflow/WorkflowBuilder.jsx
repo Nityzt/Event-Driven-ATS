@@ -135,8 +135,8 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6">
-      <div className="bg-white rounded-xl shadow-card p-4 sm:p-6">
-        <h1 className="text-xl font-bold text-stone-900 mb-6">
+      <div className="bg-white dark:bg-stone-900 rounded-xl shadow-card p-4 sm:p-6">
+        <h1 className="text-xl font-bold text-stone-900 dark:text-stone-100 mb-6">
           {existingWorkflow ? 'Edit Workflow' : 'New Workflow'}
         </h1>
 
@@ -153,14 +153,14 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
 
         {/* Triggers */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold text-stone-800 mb-3">Triggers</h2>
+          <h2 className="text-base font-semibold text-stone-800 dark:text-stone-200 mb-3">Triggers</h2>
           <WorkflowTrigger triggers={workflow.triggers} onAdd={addTrigger} onRemove={removeTrigger} />
-          {errors.triggers && <p className="text-red-500 text-sm mt-1">{errors.triggers}</p>}
+          {errors.triggers && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.triggers}</p>}
         </div>
 
         {/* Steps */}
         <div className="mb-6">
-          <h2 className="text-base font-semibold text-stone-800 mb-3">Steps</h2>
+          <h2 className="text-base font-semibold text-stone-800 dark:text-stone-200 mb-3">Steps</h2>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={workflow.steps.map(s => s.id)} strategy={verticalListSortingStrategy}>
@@ -180,26 +180,26 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
           </DndContext>
 
           {workflow.steps.length === 0 && (
-            <div className="text-center py-8 bg-stone-50 rounded-lg border-2 border-dashed border-stone-200">
-              <p className="text-sm text-stone-400">No steps added yet. Use the palette below to add steps.</p>
+            <div className="text-center py-8 bg-stone-50 dark:bg-stone-800/60 rounded-lg border-2 border-dashed border-stone-200 dark:border-stone-800">
+              <p className="text-sm text-stone-400 dark:text-stone-500">No steps added yet. Use the palette below to add steps.</p>
             </div>
           )}
-          {errors.steps && <p className="text-red-500 text-sm mt-1">{errors.steps}</p>}
+          {errors.steps && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.steps}</p>}
         </div>
 
         {/* Step Palette */}
         <StepPalette onAddStep={addStep} />
 
         {/* Actions */}
-        <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-stone-200 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-stone-200 dark:border-stone-800 sm:flex-row sm:items-center">
           <label className="flex items-center gap-2 cursor-pointer sm:mr-auto">
             <input
               type="checkbox"
               checked={workflow.enabled}
               onChange={(e) => setWorkflow({ ...workflow, enabled: e.target.checked })}
-              className="rounded border-stone-300 text-brand-600 focus:ring-brand-500"
+              className="rounded border-stone-300 dark:border-stone-700 text-brand-600 dark:text-brand-400 focus:ring-brand-500"
             />
-            <span className="text-sm text-stone-700">Enable workflow</span>
+            <span className="text-sm text-stone-700 dark:text-stone-300">Enable workflow</span>
           </label>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 [&>*]:w-full sm:[&>*]:w-auto">
             {onCancel && (
@@ -228,20 +228,20 @@ const WorkflowBuilder = ({ existingWorkflow = null, onSave = null, onCancel = nu
         size="lg"
       >
         {previewData?.length === 0 ? (
-          <p className="text-sm text-stone-400">No steps to preview.</p>
+          <p className="text-sm text-stone-400 dark:text-stone-500">No steps to preview.</p>
         ) : (
           <div className="space-y-4">
             {previewData?.map((step, i) => (
-              <div key={i} className="border border-stone-200 rounded-lg p-4">
+              <div key={i} className="border border-stone-200 dark:border-stone-800 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="w-6 h-6 bg-brand-100 text-brand-700 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0">
+                  <span className="w-6 h-6 bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0">
                     {step.stepNumber}
                   </span>
-                  <span className="font-medium text-stone-800 capitalize">
+                  <span className="font-medium text-stone-800 dark:text-stone-200 capitalize">
                     {step.type.replace(/([A-Z])/g, ' $1').trim()}
                   </span>
                 </div>
-                <pre className="bg-stone-50 rounded p-3 text-xs font-mono text-stone-700 whitespace-pre-wrap overflow-x-auto">
+                <pre className="bg-stone-50 dark:bg-stone-800/60 rounded p-3 text-xs font-mono text-stone-700 dark:text-stone-300 whitespace-pre-wrap overflow-x-auto">
                   {JSON.stringify(step.resolvedConfig, null, 2)}
                 </pre>
               </div>

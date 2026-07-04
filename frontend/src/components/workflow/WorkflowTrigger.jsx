@@ -27,20 +27,22 @@ const WorkflowTrigger = ({ triggers, onAdd, onRemove }) => {
     if (!selectedTrigger) return;
 
     const trigger = triggerTypes.find(t => t.value === selectedTrigger);
-    
-    const newTrigger = {
-      type: selectedTrigger,
-      label: trigger.label
-    };
+
+    const newTrigger = { event: selectedTrigger };
 
     if (trigger.hasStage && selectedStage) {
-      newTrigger.stage = selectedStage;
-      newTrigger.label = `${trigger.label} → ${selectedStage}`;
+      newTrigger.conditions = { stage: selectedStage };
     }
 
     onAdd(newTrigger);
     setSelectedTrigger('');
     setSelectedStage('');
+  };
+
+  const labelFor = (trigger) => {
+    const known = triggerTypes.find(t => t.value === trigger.event);
+    const base = known?.label || trigger.event;
+    return trigger.conditions?.stage ? `${base} → ${trigger.conditions.stage}` : base;
   };
 
   return (
@@ -51,14 +53,14 @@ const WorkflowTrigger = ({ triggers, onAdd, onRemove }) => {
           {triggers.map((trigger, index) => (
             <div
               key={index}
-              className="flex items-center justify-between bg-brand-50 border border-brand-200 rounded-lg px-4 py-2"
+              className="flex items-center justify-between bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 rounded-lg px-4 py-2"
             >
-              <span className="text-sm font-medium text-brand-800">
-                {trigger.label}
+              <span className="text-sm font-medium text-brand-800 dark:text-brand-200">
+                {labelFor(trigger)}
               </span>
               <button
                 onClick={() => onRemove(index)}
-                className="text-brand-500 hover:text-brand-700"
+                className="text-brand-500 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -103,7 +105,7 @@ const WorkflowTrigger = ({ triggers, onAdd, onRemove }) => {
         <button
           onClick={handleAdd}
           disabled={!selectedTrigger || (selectedTrigger === 'Stage.changed' && !selectedStage)}
-          className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:bg-stone-400 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 dark:hover:bg-brand-500 disabled:bg-stone-400 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add

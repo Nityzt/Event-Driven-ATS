@@ -4,8 +4,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Mail, MessageSquare, Clock, Webhook, Trash2 } from 'lucide-react';
 
 // Shared field styling so every step input/select/textarea stays visually consistent.
-const fieldClass = 'w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors';
-const labelClass = 'block text-sm font-medium text-stone-700 mb-1';
+const fieldClass = 'w-full px-3 py-2 text-sm border border-stone-300 dark:border-stone-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors';
+const labelClass = 'block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1';
 
 const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
@@ -48,32 +48,32 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white border-2 rounded-xl p-4 ${error ? 'border-red-300' : 'border-stone-200'}`}
+      className={`bg-white dark:bg-stone-900 border-2 rounded-xl p-4 ${error ? 'border-red-300 dark:border-red-700' : 'border-stone-200 dark:border-stone-800'}`}
     >
       <div className="flex items-start gap-3">
         {/* Drag Handle */}
         <div
           {...attributes}
           {...listeners}
-          className="cursor-move mt-1 text-stone-400 hover:text-stone-600"
+          className="cursor-move mt-1 text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300"
         >
           <GripVertical className="w-5 h-5" />
         </div>
 
         {/* Step Icon */}
-        <div className="flex-shrink-0 mt-1 text-brand-600">
+        <div className="flex-shrink-0 mt-1 text-brand-600 dark:text-brand-400">
           {getStepIcon()}
         </div>
 
         {/* Step Content */}
         <div className="flex-1">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-stone-800">
+            <h3 className="font-semibold text-stone-800 dark:text-stone-200">
               {index + 1}. {getStepTitle()}
             </h3>
             <button
               onClick={() => onDelete(step.id)}
-              className="text-red-500 hover:text-red-700"
+              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -105,7 +105,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                   rows="4"
                   placeholder="Use {{candidate.name}}, {{job.title}}, etc."
                 />
-                <p className="text-xs text-stone-500 mt-1">
+                <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
                   Available variables: {'{'}{'{'} candidate.name {'}'}{'}'}, {'{'}{'{'} candidate.email {'}'}{'}'}, {'{'}{'{'} job.title {'}'}{'}'}, {'{'}{'{'} job.location {'}'}{'}'}
                 </p>
               </div>
@@ -124,7 +124,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
                 rows="3"
                 placeholder="Use {{candidate.name}}, {{candidate.phone}}, etc."
               />
-              <p className="text-xs text-stone-500 mt-1">
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
                 Available variables: {'{'}{'{'} candidate.name {'}'}{'}'}, {'{'}{'{'} candidate.phone {'}'}{'}'}, {'{'}{'{'} job.title {'}'}{'}'}
               </p>
             </div>
@@ -207,7 +207,7 @@ const WorkflowStep = ({ step, index, onUpdate, onDelete, error }) => {
           )}
 
           {error && (
-            <p className="text-red-500 text-sm mt-2">{error}</p>
+            <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>
           )}
         </div>
       </div>
